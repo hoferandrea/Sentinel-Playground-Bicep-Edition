@@ -1,0 +1,1341 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.14.46.61228",
+      "templateHash": "18194512688472860473"
+    }
+  },
+  "parameters": {
+    "rgName": {
+      "type": "string",
+      "defaultValue": "rg-sentinel-playground-01",
+      "metadata": {
+        "description": "resource group name"
+      }
+    },
+    "laName": {
+      "type": "string",
+      "defaultValue": "la-sentinel-playground-01",
+      "metadata": {
+        "description": "log analytics workspace name"
+      }
+    },
+    "uamiName": {
+      "type": "string",
+      "defaultValue": "mi-sentinel-playbooks",
+      "metadata": {
+        "description": "user assigned managed identity name"
+      }
+    },
+    "laRetentionDays": {
+      "type": "int",
+      "defaultValue": 30,
+      "metadata": {
+        "description": "log analytics retention days"
+      }
+    },
+    "laDailyCapGb": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "log analytics daily cap in GB"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "resourceGroupDeployment",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "ressourceGroupName": {
+            "value": "[parameters('rgName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "16832913179024182250"
+            }
+          },
+          "parameters": {
+            "ressourceGroupName": {
+              "type": "string",
+              "defaultValue": "[format('rg-{0}', uniqueString(subscription().id))]"
+            },
+            "ressourceGroupLocation": {
+              "type": "string",
+              "defaultValue": "switzerlandnorth"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/resourceGroups",
+              "apiVersion": "2021-01-01",
+              "name": "[parameters('ressourceGroupName')]",
+              "location": "[parameters('ressourceGroupLocation')]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "sentinelDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logAnalyticsWorkspaceName": {
+            "value": "[parameters('laName')]"
+          },
+          "logAnalyticsWorkspaceRetentionDays": {
+            "value": "[parameters('laRetentionDays')]"
+          },
+          "logAnalyticsWorkspaceDailyCapGb": {
+            "value": "[parameters('laDailyCapGb')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "7082464807308247937"
+            }
+          },
+          "parameters": {
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "defaultValue": "[format('la-{0}', uniqueString(resourceGroup().id))]"
+            },
+            "logAnalyticsWorkspaceLocation": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "logAnalyticsWorkspaceRetentionDays": {
+              "type": "int",
+              "defaultValue": 30
+            },
+            "logAnalyticsWorkspaceDailyCapGb": {
+              "type": "int",
+              "defaultValue": 1
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2020-08-01",
+              "name": "[parameters('logAnalyticsWorkspaceName')]",
+              "location": "[parameters('logAnalyticsWorkspaceLocation')]",
+              "properties": {
+                "retentionInDays": "[parameters('logAnalyticsWorkspaceRetentionDays')]",
+                "sku": {
+                  "name": "PerGB2018"
+                },
+                "workspaceCapping": {
+                  "dailyQuotaGb": "[parameters('logAnalyticsWorkspaceDailyCapGb')]"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.OperationsManagement/solutions",
+              "apiVersion": "2015-11-01-preview",
+              "name": "[format('SecurityInsights({0})', parameters('logAnalyticsWorkspaceName'))]",
+              "location": "[parameters('logAnalyticsWorkspaceLocation')]",
+              "properties": {
+                "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+              },
+              "plan": {
+                "name": "[format('SecurityInsights({0})', parameters('logAnalyticsWorkspaceName'))]",
+                "product": "OMSGallery/SecurityInsights",
+                "publisher": "Microsoft",
+                "promotionCode": ""
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/deployments', 'resourceGroupDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "azureActiveDirectoryConnectorDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logAnalyticsWorkspaceName": {
+            "value": "[parameters('laName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "17946118411418438132"
+            }
+          },
+          "parameters": {
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "defaultValue": "[format('la-{0}', uniqueString(resourceGroup().id))]"
+            }
+          },
+          "variables": {
+            "aadLogs": [
+              "AuditLogs",
+              "SignInLogs",
+              "NonInteractiveUserSignInLogs",
+              "ServicePrincipalSignInLogs",
+              "ManagedIdentitySignInLogs",
+              "ProvisioningLogs",
+              "ADFSSignInLogs",
+              "RiskyUsers",
+              "UserRiskEvents",
+              "NetworkAccessTrafficLogs",
+              "RiskyServicePrincipals",
+              "ServicePrincipalRiskEvents"
+            ]
+          },
+          "resources": [
+            {
+              "type": "Microsoft.SecurityInsights/dataConnectors",
+              "apiVersion": "2022-10-01-preview",
+              "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('logAnalyticsWorkspaceName'))]",
+              "name": "AzureActiveDirectory",
+              "kind": "AzureActiveDirectory",
+              "properties": {
+                "dataTypes": {
+                  "alerts": {
+                    "state": "enabled"
+                  }
+                },
+                "tenantId": "[subscription().tenantId]"
+              }
+            },
+            {
+              "type": "microsoft.aadiam/diagnosticSettings",
+              "apiVersion": "2017-04-01",
+              "scope": "/",
+              "name": "[format('{0}-aadDiagnosticSetttings', parameters('logAnalyticsWorkspaceName'))]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "logs",
+                    "count": "[length(variables('aadLogs'))]",
+                    "input": {
+                      "category": "[variables('aadLogs')[copyIndex('logs')]]",
+                      "enabled": true
+                    }
+                  }
+                ],
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "azureActivityConnectorDeployment",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment'), '2020-10-01').outputs.logAnalyticsWorkspaceId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "3469597448422397718"
+            }
+          },
+          "parameters": {
+            "logAnalyticsWorkspaceId": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "subscriptionLogs": [
+              "Administrative",
+              "Security",
+              "ServiceHealth",
+              "Alert",
+              "Recommendation",
+              "Policy",
+              "Autoscale",
+              "ResourceHealth"
+            ]
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2017-05-01-preview",
+              "name": "subscriptionToLogAnalyticsWorkspace",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "logs",
+                    "count": "[length(variables('subscriptionLogs'))]",
+                    "input": {
+                      "category": "[variables('subscriptionLogs')[copyIndex('logs')]]",
+                      "enabled": true
+                    }
+                  }
+                ],
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "sentinelConfigDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logAnalyticsWorkspaceName": {
+            "value": "[parameters('laName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "500005743937991762"
+            }
+          },
+          "parameters": {
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "defaultValue": "la-bicep"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.SecurityInsights/settings",
+              "apiVersion": "2022-10-01-preview",
+              "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('logAnalyticsWorkspaceName'))]",
+              "name": "EntityAnalytics",
+              "kind": "EntityAnalytics",
+              "properties": {
+                "entityProviders": [
+                  "AzureActiveDirectory"
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.SecurityInsights/settings",
+              "apiVersion": "2022-10-01-preview",
+              "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('logAnalyticsWorkspaceName'))]",
+              "name": "Ueba",
+              "kind": "Ueba",
+              "properties": {
+                "dataSources": [
+                  "AuditLogs",
+                  "AzureActivity",
+                  "SecurityEvent",
+                  "SigninLogs"
+                ]
+              },
+              "dependsOn": [
+                "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), 'Microsoft.SecurityInsights/settings', 'EntityAnalytics')]"
+              ]
+            },
+            {
+              "type": "Microsoft.SecurityInsights/settings",
+              "apiVersion": "2022-10-01-preview",
+              "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('logAnalyticsWorkspaceName'))]",
+              "name": "Anomalies",
+              "kind": "Anomalies",
+              "dependsOn": [
+                "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), 'Microsoft.SecurityInsights/settings', 'Ueba')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'azureActiveDirectoryConnectorDeployment')]",
+        "[subscriptionResourceId('Microsoft.Resources/deployments', 'azureActivityConnectorDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "playbookUserAssignedManagedIdenityDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "userAssignedManagedIdentityName": {
+            "value": "[parameters('uamiName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "1318989652174312170"
+            }
+          },
+          "parameters": {
+            "userAssignedManagedIdentityName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2018-11-30",
+              "name": "[parameters('userAssignedManagedIdentityName')]",
+              "location": "[resourceGroup().location]"
+            }
+          ],
+          "outputs": {
+            "uamiPrincipalId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userAssignedManagedIdentityName')), '2018-11-30').principalId]"
+            },
+            "uamiName": {
+              "type": "string",
+              "value": "[parameters('userAssignedManagedIdentityName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/deployments', 'resourceGroupDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "sentinelApiConnectionDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "sentinelApiConnectionName": {
+            "value": "[format('{0}-connection', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment'), '2020-10-01').outputs.uamiName.value)]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "3529373718059912766"
+            }
+          },
+          "parameters": {
+            "sentinelApiConnectionName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/connections",
+              "apiVersion": "2016-06-01",
+              "name": "[parameters('sentinelApiConnectionName')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "displayName": "[parameters('sentinelApiConnectionName')]",
+                "parameterValueType": "Alternative",
+                "api": {
+                  "id": "[format('/subscriptions/{0}/providers/Microsoft.Web/locations/{1}/managedApis/azuresentinel', subscription().subscriptionId, resourceGroup().location)]"
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "sentinelApiConnectionName": {
+              "type": "string",
+              "value": "[parameters('sentinelApiConnectionName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "uamiSentinelRoleAssignmentDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "roleDefinitionId": {
+            "value": "ab8e14d6-4a74-4a29-9ba8-549422addade"
+          },
+          "prinipalId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment'), '2020-10-01').outputs.uamiPrincipalId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "5547886848314093693"
+            }
+          },
+          "parameters": {
+            "roleDefinitionId": {
+              "type": "string",
+              "defaultValue": "3e150937-b8fe-4cfb-8069-0eaf05ecd056"
+            },
+            "prinipalId": {
+              "type": "string"
+            },
+            "principalType": {
+              "type": "string",
+              "defaultValue": "ServicePrincipal"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "name": "[guid(resourceGroup().id, parameters('roleDefinitionId'), parameters('prinipalId'))]",
+              "properties": {
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/{1}', subscription().subscriptionId, parameters('roleDefinitionId'))]",
+                "principalId": "[parameters('prinipalId')]",
+                "principalType": "[parameters('principalType')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "sentinelTriggerPlaybooksRoleAssignmentDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "roleDefinitionId": {
+            "value": "f4c81013-99ee-4d62-a7ee-b3f1f648599a"
+          },
+          "prinipalId": {
+            "value": "7c6538eb-e706-483d-bde3-9500f39c938a"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "5547886848314093693"
+            }
+          },
+          "parameters": {
+            "roleDefinitionId": {
+              "type": "string",
+              "defaultValue": "3e150937-b8fe-4cfb-8069-0eaf05ecd056"
+            },
+            "prinipalId": {
+              "type": "string"
+            },
+            "principalType": {
+              "type": "string",
+              "defaultValue": "ServicePrincipal"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "name": "[guid(resourceGroup().id, parameters('roleDefinitionId'), parameters('prinipalId'))]",
+              "properties": {
+                "roleDefinitionId": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions/{1}', subscription().subscriptionId, parameters('roleDefinitionId'))]",
+                "principalId": "[parameters('prinipalId')]",
+                "principalType": "[parameters('principalType')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/deployments', 'resourceGroupDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "playbookDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "playbookName": {
+            "value": "la-sentinel-addCommentToIncident"
+          },
+          "sentinelApiConnectionName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelApiConnectionDeployment'), '2020-10-01').outputs.sentinelApiConnectionName.value]"
+          },
+          "uamiName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment'), '2020-10-01').outputs.uamiName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "8538660159240822006"
+            }
+          },
+          "parameters": {
+            "playbookName": {
+              "type": "string"
+            },
+            "uamiName": {
+              "type": "string"
+            },
+            "sentinelApiConnectionName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Logic/workflows",
+              "apiVersion": "2017-07-01",
+              "name": "[parameters('playbookName')]",
+              "location": "[resourceGroup().location]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uamiName')))]": {}
+                }
+              },
+              "properties": {
+                "state": "Enabled",
+                "parameters": {
+                  "$connections": {
+                    "value": {
+                      "azuresentinel": {
+                        "connectionId": "[resourceId('Microsoft.Web/connections', parameters('sentinelApiConnectionName'))]",
+                        "connectionName": "[parameters('sentinelApiConnectionName')]",
+                        "connectionProperties": {
+                          "authentication": {
+                            "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uamiName'))]",
+                            "type": "ManagedServiceIdentity"
+                          }
+                        },
+                        "id": "[format('/subscriptions/{0}/providers/Microsoft.Web/locations/{1}/managedApis/azuresentinel', subscription().subscriptionId, resourceGroup().location)]"
+                      }
+                    }
+                  }
+                },
+                "definition": {
+                  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "$connections": {
+                      "defaultValue": {},
+                      "type": "Object"
+                    }
+                  },
+                  "triggers": {
+                    "Microsoft_Sentinel_incident": {
+                      "type": "ApiConnectionWebhook",
+                      "inputs": {
+                        "body": {
+                          "callback_url": "@{listCallbackUrl()}"
+                        },
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                          }
+                        },
+                        "path": "/subscribe"
+                      }
+                    }
+                  },
+                  "actions": {
+                    "Add_comment_to_incident_(V3)": {
+                      "inputs": {
+                        "body": {
+                          "incidentArmId": "@triggerBody()?['object']?['id']",
+                          "message": "sentinel playground rocks!"
+                        },
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                          }
+                        },
+                        "method": "post",
+                        "path": "/Incidents/Comment"
+                      },
+                      "runAfter": {},
+                      "type": "ApiConnection"
+                    }
+                  },
+                  "outputs": {}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelApiConnectionDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "contentEnablement",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "uamiName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment'), '2020-10-01').outputs.uamiName.value]"
+          },
+          "laName": {
+            "value": "[parameters('laName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "11332898477702107128"
+            }
+          },
+          "parameters": {
+            "uamiName": {
+              "type": "string"
+            },
+            "laName": {
+              "type": "string"
+            },
+            "utcValue": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            }
+          },
+          "variables": {
+            "$fxv#0": "#####################################################################################################################################################################################\r\n# andrea[dot]hofer[at]gmail[dot]com / https://www.linkedin.com/in/andrea-hofer-ch/ | 18.02.2023                                                                                     #\r\n#####################################################################################################################################################################################\r\n# orignal script was done by Javier Soriano (MSFT): https://github.com/private/EnableRules.ps1                                                                                      #\r\n# i added some small modifications to support bicep deployments, added more execution output and support for multiple deployments (check if deployed before creating duplicates)    #\r\n#####################################################################################################################################################################################\r\n\r\nparam(\r\n    [Parameter(Mandatory = $true)][string]$ResourceGroup,\r\n    [Parameter(Mandatory = $true)][string]$Workspace,\r\n    [Parameter(Mandatory = $false)][string[]]$Connectors,\r\n    [Parameter(Mandatory = $false)][string[]]$SeveritiesToInclude = @(\"Informational\", \"Low\", \"Medium\", \"High\")\r\n)\r\n\r\n$analyticsRuleCounter = 0\r\n\r\n$context = Get-AzContext  \r\n\r\n\r\n$SubscriptionId = $context.Subscription.Id\r\nWrite-Host \r\nWrite-Host \"Connected to Azure with subscription: $($context.Subscription) with $($context.Account.type) $($context.Account.id)\"\r\n\r\n\r\n$baseUri = \"/subscriptions/${SubscriptionId}/resourceGroups/${ResourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${Workspace}\"\r\n$templatesUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRuleTemplates?api-version=2019-01-01-preview\"\r\n$alertUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRules/\"\r\n\r\n$analyticsRulesUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRules?api-version=2022-11-01\"\r\n\r\n\r\ntry {\r\n    $alertRulesTemplates = ((Invoke-AzRestMethod -Path $templatesUri -Method GET).Content | ConvertFrom-Json).value\r\n    $analyticsRules = ((Invoke-AzRestMethod -Path $analyticsRulesUri -Method GET).Content | ConvertFrom-Json).value\r\n\r\n    Write-Host \"found $($alertRulesTemplates.Count) alert rules templates\"\r\n    Write-Host \"found $($analyticsRulesUri.Count) deployed alert rules\"\r\n}\r\ncatch {\r\n    Write-Verbose $_\r\n    Write-Error \"Unable to get alert rules with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n}\r\n\r\n\r\nif ($Connectors) {\r\n    foreach ($item in $alertRulesTemplates) {\r\n        #Make sure that the rules is not already deployed\r\n        If($analyticsRules.Properties.displayname -notcontains $item.properties.displayName) {\r\n            \r\n            #Make sure that the template's severity is one we want to include\r\n            if ($SeveritiesToInclude.Contains($item.properties.severity)) {\r\n                switch ($item.kind) {\r\n                    \"Scheduled\" {\r\n                        foreach ($connector in $item.properties.requiredDataConnectors) {\r\n                            if ($connector.connectorId -in $Connectors) {\r\n                                #$return += $item.properties\r\n                                $guid = New-Guid\r\n                                $alertUriGuid = $alertUri + $guid + '?api-version=2022-12-01-preview'\r\n\r\n                                $properties = @{\r\n                                    displayName           = $item.properties.displayName\r\n                                    enabled               = $true\r\n                                    suppressionDuration   = \"PT5H\"\r\n                                    suppressionEnabled    = $false\r\n                                    alertRuleTemplateName = $item.name\r\n                                    description           = $item.properties.description\r\n                                    query                 = $item.properties.query\r\n                                    queryFrequency        = $item.properties.queryFrequency\r\n                                    queryPeriod           = $item.properties.queryPeriod\r\n                                    severity              = $item.properties.severity\r\n                                    tactics               = $item.properties.tactics\r\n                                    triggerOperator       = $item.properties.triggerOperator\r\n                                    triggerThreshold      = $item.properties.triggerThreshold\r\n                                    techniques            = $item.properties.techniques\r\n                                    eventGroupingSettings = $item.properties.eventGroupingSettings\r\n                                    templateVersion       = $item.properties.version\r\n                                    entityMappings        = $item.properties.entityMappings\r\n                                }\r\n\r\n                                $alertBody = @{}\r\n                                $alertBody | Add-Member -NotePropertyName kind -NotePropertyValue $item.kind -Force\r\n                                $alertBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n                                try {\r\n                                    \"enable $($item.properties.displayName)\"\r\n                                    $result = Invoke-AzRestMethod -Path $alertUriGuid -Method PUT -Payload ($alertBody | ConvertTo-Json -Depth 3)\r\n                                    \"result: $($result.StatusCode)\"\r\n                                    $analyticsRuleCounter++\r\n                                }\r\n                                catch {\r\n                                    Write-Host \"Can't enable rule template with connectors: \" $item.properties.requiredDataConnectors\r\n                                    Write-Verbose $_\r\n                                    Write-Error \"Unable to create alert rule with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n                                }\r\n\r\n                                break\r\n                            }\r\n                        }\r\n                    }\r\n                    \"NRT\" {\r\n                        foreach ($connector in $item.properties.requiredDataConnectors) {\r\n                            if ($connector.connectorId -in $Connectors) {\r\n                                #$return += $item.properties\r\n                                $guid = New-Guid\r\n                                $alertUriGuid = $alertUri + $guid + '?api-version=2022-12-01-preview'\r\n\r\n                                $properties = @{\r\n                                    displayName           = $item.properties.displayName\r\n                                    enabled               = $true\r\n                                    suppressionDuration   = \"PT5H\"\r\n                                    suppressionEnabled    = $false\r\n                                    alertRuleTemplateName = $item.name\r\n                                    description           = $item.properties.description\r\n                                    query                 = $item.properties.query\r\n                                    severity              = $item.properties.severity\r\n                                    tactics               = $item.properties.tactics\r\n                                    techniques            = $item.properties.techniques\r\n                                    eventGroupingSettings = $item.properties.eventGroupingSettings\r\n                                    templateVersion       = $item.properties.version\r\n                                    entityMappings        = $item.properties.entityMappings\r\n                                }\r\n\r\n                                $alertBody = @{}\r\n                                $alertBody | Add-Member -NotePropertyName kind -NotePropertyValue $item.kind -Force\r\n                                $alertBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n                                try {\r\n                                    \"enable $($item.properties.displayName)\"\r\n                                    $result = Invoke-AzRestMethod -Path $alertUriGuid -Method PUT -Payload ($alertBody | ConvertTo-Json -Depth 3)\r\n                                    \"result: $($result.StatusCode)\"\r\n                                    $analyticsRuleCounter++\r\n                                }\r\n                                catch {\r\n                                    Write-Host \"Can't enable rule template with connectors: \" $item.properties.requiredDataConnectors\r\n                                    Write-Verbose $_\r\n                                    Write-Error \"Unable to create alert rule with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n                                }\r\n\r\n                                break\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        } else {\r\n            Write-Host \"rule $($item.properties.displayName) already deployed\"\r\n        }\r\n    \r\n    }\r\n}\r\n\r\n# create output\r\n$DeploymentScriptOutputs = @{}\r\n$DeploymentScriptOutputs[\"result\"] = \"$analyticsRuleCounter analytics rules enabled.\""
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2020-10-01",
+              "name": "[format('enableContentScript-{0}', parameters('utcValue'))]",
+              "location": "[resourceGroup().location]",
+              "kind": "AzurePowerShell",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uamiName')))]": {}
+                }
+              },
+              "properties": {
+                "azPowerShellVersion": "8.3",
+                "forceUpdateTag": "[parameters('utcValue')]",
+                "scriptContent": "[variables('$fxv#0')]",
+                "arguments": "[format('-ResourceGroup {0} -workspace {1} -connectors \"AzureActiveDirectory\",\"AzureActivity\"', resourceGroup().name, parameters('laName'))]",
+                "retentionInterval": "P1D"
+              }
+            }
+          ],
+          "outputs": {
+            "enableContentResult": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', format('enableContentScript-{0}', parameters('utcValue'))), '2020-10-01').outputs.result]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "incidentDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "uamiName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment'), '2020-10-01').outputs.uamiName.value]"
+          },
+          "laName": {
+            "value": "[parameters('laName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "7177411906626449860"
+            }
+          },
+          "parameters": {
+            "uamiName": {
+              "type": "string"
+            },
+            "laName": {
+              "type": "string"
+            },
+            "utcValue": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            }
+          },
+          "variables": {
+            "$fxv#0": "#################################################################################################################################################################################################\r\n# andrea[dot]hofer[at]gmail[dot]com / https://www.linkedin.com/in/andrea-hofer-ch/ | 19.02.2023                                                                                                 #\r\n#################################################################################################################################################################################################\r\n# based on the enableRules script by Javier Soriano (MSFT): https://private/EnableRules.ps1                                                                                                     #       \r\n#################################################################################################################################################################################################\r\n\r\nparam(\r\n    [Parameter(Mandatory = $true)][string]$ResourceGroup,\r\n    [Parameter(Mandatory = $true)][string]$Workspace\r\n)\r\n\r\n$context = Get-AzContext  \r\n\r\n$SubscriptionId = $context.Subscription.Id\r\nWrite-Host \r\nWrite-Host \"Connected to Azure with subscription: $($context.Subscription) with $($context.Account.type) $($context.Account.id)\"\r\n\r\n# build incident url\r\n$inicdentUri = \"/subscriptions/${SubscriptionId}/resourceGroups/${ResourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${Workspace}/providers/Microsoft.SecurityInsights/incidents/$(New-Guid)?api-version=2022-11-01\"\r\n\r\n# build incident\r\n$properties = @{\r\n    title                       = \"Welcome to the Sentinel Playground!\"\r\n    description                 = \"Have fun and happy testing.\"\r\n    severity                    = \"High\"\r\n    status                      = \"New\"\r\n}\r\n\r\n$incidentBody = @{}\r\n$incidentBody | Add-Member -NotePropertyName etag -NotePropertyValue \"0300bf09-0000-0000-0000-5c37296e0000\"\r\n$incidentBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n# put incident\r\n$result = Invoke-AzRestMethod -Path $inicdentUri -Method PUT -Payload ($incidentBody | ConvertTo-Json -Depth 3)\r\n$convertedResult = $result.Content | ConvertFrom-Json\r\nWrite-Host \"incident $($convertedResult.properties.incidentNumber) created.\"\r\n\r\n# create output\r\n$DeploymentScriptOutputs = @{}\r\n$DeploymentScriptOutputs[\"result\"] = \"incident $($convertedResult.properties.incidentNumber) created.\""
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2020-10-01",
+              "name": "[format('createIncident-{0}', parameters('utcValue'))]",
+              "location": "[resourceGroup().location]",
+              "kind": "AzurePowerShell",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uamiName')))]": {}
+                }
+              },
+              "properties": {
+                "azPowerShellVersion": "8.3",
+                "forceUpdateTag": "[parameters('utcValue')]",
+                "scriptContent": "[variables('$fxv#0')]",
+                "arguments": "[format('-ResourceGroup {0} -workspace {1}', resourceGroup().name, parameters('laName'))]",
+                "retentionInterval": "P1D"
+              }
+            }
+          ],
+          "outputs": {
+            "incidenResult": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', format('createIncident-{0}', parameters('utcValue'))), '2020-10-01').outputs.result]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "contentDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logAnalyticsWorkspaceName": {
+            "value": "[parameters('laName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.46.61228",
+              "templateHash": "12186201177297986625"
+            }
+          },
+          "parameters": {
+            "logAnalyticsWorkspaceName": {
+              "type": "string",
+              "defaultValue": "la-bicep"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "automationRuleDeployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "workspace": {
+                    "value": "[parameters('logAnalyticsWorkspaceName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "11041843090009156916"
+                    }
+                  },
+                  "parameters": {
+                    "workspace": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "ruleName": "Playground Automation Rule"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.SecurityInsights/automationRules",
+                      "apiVersion": "2019-01-01-preview",
+                      "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('workspace'))]",
+                      "name": "[guid(variables('ruleName'), resourceGroup().id, subscription().subscriptionId)]",
+                      "properties": {
+                        "displayName": "[variables('ruleName')]",
+                        "order": 1,
+                        "triggeringLogic": {
+                          "isEnabled": true,
+                          "expirationTimeUtc": "",
+                          "triggersOn": "Incidents",
+                          "triggersWhen": "Created",
+                          "conditions": []
+                        },
+                        "actions": [
+                          {
+                            "order": 1,
+                            "actionType": "ModifyProperties",
+                            "actionConfiguration": {
+                              "labels": [
+                                {
+                                  "labelName": "Playground"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "analyticsRuleDeployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "workspace": {
+                    "value": "[parameters('logAnalyticsWorkspaceName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "11276521783897076366"
+                    }
+                  },
+                  "parameters": {
+                    "workspace": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "ruleName": "Playground Analytics Rule",
+                    "description": "Description",
+                    "severity": "Informational",
+                    "query": "SigninLogs\r\n| take 1\r\n"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.SecurityInsights/alertRules",
+                      "apiVersion": "2022-10-01-preview",
+                      "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('workspace'))]",
+                      "name": "[guid(variables('ruleName'))]",
+                      "kind": "Scheduled",
+                      "properties": {
+                        "customDetails": {},
+                        "description": "[variables('description')]",
+                        "displayName": "[variables('ruleName')]",
+                        "enabled": true,
+                        "alertRuleTemplateName": null,
+                        "templateVersion": null,
+                        "eventGroupingSettings": {
+                          "aggregationKind": "SingleAlert"
+                        },
+                        "incidentConfiguration": {
+                          "createIncident": true
+                        },
+                        "query": "[variables('query')]",
+                        "queryFrequency": "PT5H",
+                        "queryPeriod": "PT5H",
+                        "severity": "[variables('severity')]",
+                        "suppressionDuration": "PT5H",
+                        "suppressionEnabled": false,
+                        "tactics": [
+                          "DefenseEvasion"
+                        ],
+                        "techniques": [
+                          "T1562"
+                        ],
+                        "entityMappings": null,
+                        "triggerOperator": "GreaterThan",
+                        "triggerThreshold": 0
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "queryPackDeployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {},
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "4321860727672257426"
+                    }
+                  },
+                  "variables": {
+                    "defaultQueryPackName": "playGroundQueryPack",
+                    "queryName": "playground query 1",
+                    "description": "playground query 1",
+                    "query": "print \"playGround\"\r\n"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.OperationalInsights/queryPacks",
+                      "apiVersion": "2019-09-01",
+                      "name": "[variables('defaultQueryPackName')]",
+                      "location": "[resourceGroup().location]",
+                      "properties": {}
+                    },
+                    {
+                      "type": "Microsoft.OperationalInsights/queryPacks/queries",
+                      "apiVersion": "2019-09-01",
+                      "name": "[format('{0}/{1}', variables('defaultQueryPackName'), guid(variables('queryName'), resourceGroup().id, subscription().subscriptionId))]",
+                      "properties": {
+                        "displayName": "[variables('queryName')]",
+                        "description": "[variables('description')]",
+                        "body": "[variables('query')]",
+                        "related": {
+                          "categories": [
+                            "security"
+                          ],
+                          "resourceTypes": [
+                            "microsoft.operationalinsights/workspaces"
+                          ]
+                        },
+                        "tags": {
+                          "labels": [
+                            "playGround"
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.OperationalInsights/queryPacks', variables('defaultQueryPackName'))]"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "huntingQueryDeployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "workspace": {
+                    "value": "[parameters('logAnalyticsWorkspaceName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "1742080971323871730"
+                    }
+                  },
+                  "parameters": {
+                    "workspace": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "queryName": "Playground Hunting Query",
+                    "description": "Playground Hunting Query",
+                    "query": "SigninLogs\r\n| take 1\r\n"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+                      "apiVersion": "2020-08-01",
+                      "name": "[format('{0}/{1}', parameters('workspace'), guid(variables('queryName')))]",
+                      "properties": {
+                        "category": "Hunting Queries",
+                        "etag": "*",
+                        "displayName": "[variables('queryName')]",
+                        "query": "[variables('query')]",
+                        "tags": [
+                          {
+                            "name": "description",
+                            "value": "[variables('description')]"
+                          },
+                          {
+                            "name": "tactics",
+                            "value": "DefenseEvasion"
+                          },
+                          {
+                            "name": "techniques",
+                            "value": "T1218,T1218.005"
+                          },
+                          {
+                            "name": "createdBy",
+                            "value": "playground"
+                          },
+                          {
+                            "name": "createdTimeUtc",
+                            "value": "11/25/2022 12:30:05"
+                          }
+                        ],
+                        "version": 2
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "watchlistDeployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "workspace": {
+                    "value": "[parameters('logAnalyticsWorkspaceName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.46.61228",
+                      "templateHash": "4900895735596273196"
+                    }
+                  },
+                  "parameters": {
+                    "workspace": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "$fxv#0": "header1,header2,header3\r\nthis,is,sparta\r\n42,is,key",
+                    "displayName": "Playground Watchlist",
+                    "description": "Watchlist queried by xxx",
+                    "searchKey": "header3",
+                    "csvFileName": "playGroundWatchlist.csv",
+                    "watchlistVersion": 2,
+                    "watchlistProvider": "Playground SOC",
+                    "source": "GitHub Repository",
+                    "resourceGuid": "[guid(variables('displayName'), resourceGroup().id, subscription().subscriptionId)]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.OperationalInsights/workspaces/providers/Watchlists",
+                      "apiVersion": "2021-03-01-preview",
+                      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('resourceGuid'))]",
+                      "kind": "",
+                      "properties": {
+                        "displayName": "[variables('displayName')]",
+                        "source": "[variables('source')]",
+                        "description": "[variables('description')]",
+                        "provider": "[variables('watchlistProvider')]",
+                        "isDeleted": false,
+                        "labels": [],
+                        "defaultDuration": "P1000Y",
+                        "contentType": "Text/Csv",
+                        "numberOfLinesToSkip": 0,
+                        "itemsSearchKey": "[variables('searchKey')]",
+                        "rawContent": "[format('{0}', variables('$fxv#0'))]"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'playbookUserAssignedManagedIdenityDeployment')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "playGround": {
+      "type": "string",
+      "value": "Thanks for using Playground!"
+    },
+    "incidentResult": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'incidentDeployment'), '2020-10-01').outputs.incidenResult.value]"
+    },
+    "contentResult": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'contentEnablement'), '2020-10-01').outputs.enableContentResult.value]"
+    }
+  }
+}
