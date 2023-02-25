@@ -35,23 +35,23 @@
 							"validationMessage": ""
 						},
 						"visible": true
+					},
+					{
+						"name": "uamiName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "user-assigned Managed Identity Name",
+						"defaultValue": "mi-sentinel-playbooks",
+						"toolTip": "user assigned managed identity name",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
 					}
 			],
 			"visible": true
 			},
-            {
-                "name": "uamiName",
-                "type": "Microsoft.Common.TextBox",
-                "label": "user-assigned Managed Identity Name",
-                "defaultValue": "mi-sentinel-playbooks",
-                "toolTip": "user assigned managed identity name",
-                "constraints": {
-                    "required": false,
-                    "regex": "",
-                    "validationMessage": ""
-                },
-                "visible": true
-            },
 			{
 			"name": "sectionLaSettings",
 			"type": "Microsoft.Common.Section",
