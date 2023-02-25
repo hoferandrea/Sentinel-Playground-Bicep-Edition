@@ -69,6 +69,30 @@
                     "validationMessage": ""
                 },
                 "visible": true
+            },
+            {
+                "name": "enableHealthMonitoring",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Enable Health Monitoring",
+                "defaultValue": "true",
+                "toolTip": "enable health monitoring",
+                "constraints": {
+                    "required": false
+                    
+                },
+                "visible": true
+            },
+            {
+                "name": "enableAnalyticsRules",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Enable Analytics Rules",
+                "defaultValue": "true",
+                "toolTip": "enable analytics rules from templates",
+                "constraints": {
+                    "required": false
+                    
+                },
+                "visible": true
             }
         ],
         "steps": [],
@@ -77,7 +101,9 @@
             "laName": "[basics('laName')]",
             "uamiName": "[basics('uamiName')]",
             "laRetentionDays": "[basics('laRetentionDays')]",
-            "laDailyCapGb": "[basics('laDailyCapGb')]"
+            "laDailyCapGb": "[basics('laDailyCapGb')]",
+            "enableHealthMonitoring": "[basics('enableHealthMonitoring')]",
+            "enableAnalyticsRules": "[basics('enableAnalyticsRules')]"
         }
     }
 }

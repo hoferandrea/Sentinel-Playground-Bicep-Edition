@@ -1,4 +1,5 @@
-param logAnalyticsWorkspaceName string = 'la-bicep'
+param logAnalyticsWorkspaceName string
+param enableHealthMonitoring bool
 
 // reference log analytics workspace
 resource workspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
@@ -42,7 +43,7 @@ resource anomalies 'Microsoft.SecurityInsights/settings@2022-10-01-preview' = {
 }
 
 // describe health settings
-resource healthSettings 'Microsoft.OperationalInsights/workspaces/providers/settings/providers/diagnosticSettings@2021-05-01-preview' = {
+resource healthSettings 'Microsoft.OperationalInsights/workspaces/providers/settings/providers/diagnosticSettings@2021-05-01-preview' = if(enableHealthMonitoring) {
   name: '${workspace.name}/Microsoft.SecurityInsights/SentinelHealth/Microsoft.Insights/HealthSettings'
   properties: {
     workspaceId: workspace.id

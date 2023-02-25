@@ -22,6 +22,12 @@ param laRetentionDays int = 30
 @description('log analytics daily cap in GB')
 param laDailyCapGb int = 1
 
+@description('enable health monitoring')
+param enableHealthMonitoring bool = true
+
+@description('enable analytics rules from templates')
+param enableAnalyticsRules bool = true
+
 // describe the rg
 module resourceGroup './modules/resourceGroup.bicep' = {
   name: 'resourceGroupDeployment'
@@ -96,6 +102,7 @@ module sentinelConfig 'modules/sentinelConfig.bicep' = {
   dependsOn: [azureActivityConnector, azureActiveDirectoryConnector]
   params:{
     logAnalyticsWorkspaceName: laName
+    enableHealthMonitoring: enableHealthMonitoring
   }
 }
 
@@ -164,6 +171,7 @@ module deyplomentScriptContent 'modules/enableContent/enableContent.bicep' = {
   params:{
     uamiName: playbookUserAssignedManagedIdenity.outputs.uamiName
     laName: laName
+    enableAnalyticsRules: enableAnalyticsRules
   }
 }
 

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.85.62628",
-      "templateHash": "17243800889330864436"
+      "templateHash": "18352049764735783219"
     }
   },
   "parameters": {
@@ -42,6 +42,20 @@
       "defaultValue": 1,
       "metadata": {
         "description": "log analytics daily cap in GB"
+      }
+    },
+    "enableHealthMonitoring": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "enable health monitoring"
+      }
+    },
+    "enableAnalyticsRules": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "enable analytics rules from templates"
       }
     }
   },
@@ -409,6 +423,9 @@
         "parameters": {
           "logAnalyticsWorkspaceName": {
             "value": "[parameters('laName')]"
+          },
+          "enableHealthMonitoring": {
+            "value": "[parameters('enableHealthMonitoring')]"
           }
         },
         "template": {
@@ -418,13 +435,15 @@
             "_generator": {
               "name": "bicep",
               "version": "0.14.85.62628",
-              "templateHash": "8414320062458159765"
+              "templateHash": "14857570390440668046"
             }
           },
           "parameters": {
             "logAnalyticsWorkspaceName": {
-              "type": "string",
-              "defaultValue": "la-bicep"
+              "type": "string"
+            },
+            "enableHealthMonitoring": {
+              "type": "bool"
             }
           },
           "resources": [
@@ -469,6 +488,7 @@
               ]
             },
             {
+              "condition": "[parameters('enableHealthMonitoring')]",
               "type": "Microsoft.OperationalInsights/workspaces/providers/settings/providers/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
               "name": "[format('{0}/Microsoft.SecurityInsights/SentinelHealth/Microsoft.Insights/HealthSettings', parameters('logAnalyticsWorkspaceName'))]",
@@ -872,6 +892,9 @@
           },
           "laName": {
             "value": "[parameters('laName')]"
+          },
+          "enableAnalyticsRules": {
+            "value": "[parameters('enableAnalyticsRules')]"
           }
         },
         "template": {
@@ -881,7 +904,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.14.85.62628",
-              "templateHash": "11829181640722432183"
+              "templateHash": "14088674427796387451"
             }
           },
           "parameters": {
@@ -894,6 +917,9 @@
             "utcValue": {
               "type": "string",
               "defaultValue": "[utcNow()]"
+            },
+            "enableAnalyticsRules": {
+              "type": "bool"
             }
           },
           "variables": {
@@ -901,6 +927,7 @@
           },
           "resources": [
             {
+              "condition": "[parameters('enableAnalyticsRules')]",
               "type": "Microsoft.Resources/deploymentScripts",
               "apiVersion": "2020-10-01",
               "name": "[format('enableContentScript-{0}', parameters('utcValue'))]",
