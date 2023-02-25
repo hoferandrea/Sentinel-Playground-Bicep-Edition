@@ -5,7 +5,7 @@ resource workspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existin
   name: logAnalyticsWorkspaceName
 }
 
-
+// describe entity analaytics
 resource entityAnalytics 'Microsoft.SecurityInsights/settings@2022-10-01-preview' = {
   name: 'EntityAnalytics'
   kind: 'EntityAnalytics'
@@ -17,6 +17,7 @@ resource entityAnalytics 'Microsoft.SecurityInsights/settings@2022-10-01-preview
   }
 }
 
+// describe ueba
 resource ueba 'Microsoft.SecurityInsights/settings@2022-10-01-preview' = {
   name: 'Ueba'
   kind: 'Ueba'
@@ -32,6 +33,7 @@ resource ueba 'Microsoft.SecurityInsights/settings@2022-10-01-preview' = {
   }
 }
 
+// describe anomalies
 resource anomalies 'Microsoft.SecurityInsights/settings@2022-10-01-preview' = {
   name: 'Anomalies'
   kind: 'Anomalies'
@@ -39,31 +41,24 @@ resource anomalies 'Microsoft.SecurityInsights/settings@2022-10-01-preview' = {
   dependsOn: [ueba]
 }
 
-
-// sentinel health monitoring - unspupported as of now
-/*
-
-      // describe the diagnostic settings on the subscription
-      var subscriptionLogs = [
-        'Analytics'
-        'Automation'
-        'DataConnectors'
-      ]
-
-      resource sentinel 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' existing = {
-        name: 'SecurityInsights(la-sentinel-playground-01)'
+// describe health settings
+resource healthSettings 'Microsoft.OperationalInsights/workspaces/providers/settings/providers/diagnosticSettings@2021-05-01-preview' = {
+  name: '${workspace.name}/Microsoft.SecurityInsights/SentinelHealth/Microsoft.Insights/HealthSettings'
+  properties: {
+    workspaceId: workspace.id
+    logs: [
+      {
+        category: 'Automation'
+        enabled: true
       }
-
-      resource subscriptionToLa 'Microsoft.Insights/diagnosticSettings@2023-02-01-preview' = {
-        name: 'sentinelToLogAnalyticsWorkspace'
-        scope: sentinel
-        properties: {
-          workspaceId: workspace.id
-          logs: [for log in subscriptionLogs: {
-            category: log
-            enabled: true
-          }]
-        }
+      {
+        category: 'DataConnectors'
+        enabled: true
       }
-
-*/
+      {
+        category: 'Analytics'
+        enabled: true
+      }
+    ]
+  }
+}
