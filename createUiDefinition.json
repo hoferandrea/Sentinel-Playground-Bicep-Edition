@@ -1,0 +1,83 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Azure.CreateUIDef",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "resourceTypes": [],
+        "basics": [
+            {
+                "name": "rgName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Rg Name",
+                "defaultValue": "rg-sentinel-playground-01",
+                "toolTip": "resource group name",
+                "constraints": {
+                    "required": false,
+                    "regex": "",
+                    "validationMessage": ""
+                },
+                "visible": true
+            },
+            {
+                "name": "laName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "La Name",
+                "defaultValue": "la-sentinel-playground-01",
+                "toolTip": "log analytics workspace name",
+                "constraints": {
+                    "required": false,
+                    "regex": "",
+                    "validationMessage": ""
+                },
+                "visible": true
+            },
+            {
+                "name": "uamiName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Uami Name",
+                "defaultValue": "mi-sentinel-playbooks",
+                "toolTip": "user assigned managed identity name",
+                "constraints": {
+                    "required": false,
+                    "regex": "",
+                    "validationMessage": ""
+                },
+                "visible": true
+            },
+            {
+                "name": "laRetentionDays",
+                "type": "Microsoft.Common.TextBox",
+                "label": "La Retention Days",
+                "defaultValue": "30",
+                "toolTip": "log analytics retention days",
+                "constraints": {
+                    "required": false,
+                    "regex": "",
+                    "validationMessage": ""
+                },
+                "visible": true
+            },
+            {
+                "name": "laDailyCapGb",
+                "type": "Microsoft.Common.TextBox",
+                "label": "La Daily Cap Gb",
+                "defaultValue": "1",
+                "toolTip": "log analytics daily cap in GB",
+                "constraints": {
+                    "required": false,
+                    "regex": "",
+                    "validationMessage": ""
+                },
+                "visible": true
+            }
+        ],
+        "steps": [],
+        "outputs": {
+            "rgName": "[basics('rgName')]",
+            "laName": "[basics('laName')]",
+            "uamiName": "[basics('uamiName')]",
+            "laRetentionDays": "[basics('laRetentionDays')]",
+            "laDailyCapGb": "[basics('laDailyCapGb')]"
+        }
+    }
+}
