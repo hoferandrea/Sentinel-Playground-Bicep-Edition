@@ -49,3 +49,13 @@ module watchlist 'Watchlists/playGroundWatchlist.bicep' = {
     workspace: workspace.name
   }
 }
+
+// deploy workbooks
+module workbook 'Workbooks/playGroundWorkbook.bicep' = {
+  name: 'workbookDeployment'
+  scope: resourceGroup()
+  params:{
+    workspace: workspace.name
+  }
+}
+
