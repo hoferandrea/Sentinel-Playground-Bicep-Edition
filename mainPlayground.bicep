@@ -62,6 +62,18 @@ module azureActivityConnector 'modules/dataConnector/azureAcivity.bicep' = {
   }
 }
 
+// describe the m365 defender connector
+module defender365connector 'modules/dataConnector/defender365.bicep' = {
+  name: 'defender365ConnectorDeployment'
+  scope: az.resourceGroup(rgName)
+  dependsOn: [sentinel]
+  params:{
+    logAnalyticsWorkspaceName: laName
+  }
+}
+
+
+
 // describe the taxii connector for e.g. alientvault
 // disabled per default - if you have an api key, change the parameter apiKey/taxii server and enable this module
 /*
