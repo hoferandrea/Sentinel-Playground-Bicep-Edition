@@ -30,4 +30,4 @@ resource enableContentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' 
   }
 }
 
-output enableContentResult string = enableContentScript.properties.outputs.result
+output enableContentResult string = enableAnalyticsRules ? enableContentScript.properties.outputs.result : 'not enabled'
