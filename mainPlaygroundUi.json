@@ -5,36 +5,44 @@
     "parameters": {
         "resourceTypes": [],
         "basics": [
-            {
-                "name": "rgName",
-                "type": "Microsoft.Common.TextBox",
-                "label": "Rg Name",
-                "defaultValue": "rg-sentinel-playground-01",
-                "toolTip": "resource group name",
-                "constraints": {
-                    "required": false,
-                    "regex": "",
-                    "validationMessage": ""
-                },
-                "visible": true
-            },
-            {
-                "name": "laName",
-                "type": "Microsoft.Common.TextBox",
-                "label": "La Name",
-                "defaultValue": "la-sentinel-playground-01",
-                "toolTip": "log analytics workspace name",
-                "constraints": {
-                    "required": false,
-                    "regex": "",
-                    "validationMessage": ""
-                },
-                "visible": true
-            },
+			{
+			"name": "sectionBasic",
+			"type": "Microsoft.Common.Section",
+			"label": "Basic Settings",
+			"elements": [
+					{
+						"name": "rgName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Resource Group Name",
+						"defaultValue": "rg-sentinel-playground-01",
+						"toolTip": "resource group name",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					},
+					{
+						"name": "laName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Log Analytics Workspace Name",
+						"defaultValue": "la-sentinel-playground-01",
+						"toolTip": "log analytics workspace name",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					}
+			],
+			"visible": true
+			},
             {
                 "name": "uamiName",
                 "type": "Microsoft.Common.TextBox",
-                "label": "Uami Name",
+                "label": "user-assigned Managed Identity Name",
                 "defaultValue": "mi-sentinel-playbooks",
                 "toolTip": "user assigned managed identity name",
                 "constraints": {
@@ -44,56 +52,82 @@
                 },
                 "visible": true
             },
-            {
-                "name": "laRetentionDays",
-                "type": "Microsoft.Common.TextBox",
-                "label": "La Retention Days",
-                "defaultValue": "30",
-                "toolTip": "log analytics retention days",
-                "constraints": {
-                    "required": false,
-                    "regex": "",
-                    "validationMessage": ""
-                },
-                "visible": true
-            },
-            {
-                "name": "laDailyCapGb",
-                "type": "Microsoft.Common.TextBox",
-                "label": "La Daily Cap Gb",
-                "defaultValue": "1",
-                "toolTip": "log analytics daily cap in GB",
-                "constraints": {
-                    "required": false,
-                    "regex": "",
-                    "validationMessage": ""
-                },
-                "visible": true
-            },
-            {
-                "name": "enableHealthMonitoring",
-                "type": "Microsoft.Common.CheckBox",
-                "label": "Enable Health Monitoring",
-                "defaultValue": "true",
-                "toolTip": "enable health monitoring",
-                "constraints": {
-                    "required": false
-                    
-                },
-                "visible": true
-            },
-            {
-                "name": "enableAnalyticsRules",
-                "type": "Microsoft.Common.CheckBox",
-                "label": "Enable Analytics Rules",
-                "defaultValue": "true",
-                "toolTip": "enable analytics rules from templates",
-                "constraints": {
-                    "required": false
-                    
-                },
-                "visible": true
-            }
+			{
+			"name": "sectionLaSettings",
+			"type": "Microsoft.Common.Section",
+			"label": "Log Analytics Settings",
+			"elements": [
+					{
+						"name": "laRetentionDays",
+						"type": "Microsoft.Common.TextBox",
+						"label": "La Retention Days",
+						"defaultValue": "30",
+						"toolTip": "log analytics retention days",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					},
+					{
+						"name": "laDailyCapGb",
+						"type": "Microsoft.Common.TextBox",
+						"label": "La Daily Cap Gb",
+						"defaultValue": "1",
+						"toolTip": "log analytics daily cap in GB",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					}
+			],
+			"visible": true
+			},
+			{
+			"name": "sectionSentinelSettings",
+			"type": "Microsoft.Common.Section",
+			"label": "Sentinel Settings",
+			"elements": [
+				{
+					"name": "enableHealthMonitoring",
+					"type": "Microsoft.Common.CheckBox",
+					"label": "Enable Health Monitoring",
+					"defaultValue": "true",
+					"toolTip": "enable health monitoring",
+					"constraints": {
+						"required": false
+						
+					},
+					"visible": true
+				}
+			],
+			"visible": true
+			},
+
+			{
+			"name": "sectionContent",
+			"type": "Microsoft.Common.Section",
+			"label": "Content Settings",
+			"elements": [
+				{
+					"name": "enableAnalyticsRules",
+					"type": "Microsoft.Common.CheckBox",
+					"label": "Enable Analytics Rules",
+					"defaultValue": "true",
+					"toolTip": "enable analytics rules from templates",
+					"constraints": {
+						"required": false
+						
+					},
+					"visible": true
+				}
+			],
+			"visible": true
+			}
+
         ],
         "steps": [],
         "outputs": {
