@@ -15,6 +15,7 @@ The following components are deployed/configured:
 - data connectors
     - azure activity
     - azure ad 
+    - defender 365 incidents
 - demo playbook (with a user-assigned managed identity + required permissions)
 - sentinel permissions to trigger playbooks
 - analytics rule (template)
