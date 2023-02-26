@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.14.85.62628",
-      "templateHash": "18352049764735783219"
+      "templateHash": "16971019222407400995"
     }
   },
   "parameters": {
@@ -904,7 +904,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.14.85.62628",
-              "templateHash": "14088674427796387451"
+              "templateHash": "7519609632737236135"
             }
           },
           "parameters": {
@@ -951,7 +951,7 @@
           "outputs": {
             "enableContentResult": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', format('enableContentScript-{0}', parameters('utcValue'))), '2020-10-01').outputs.result]"
+              "value": "[if(parameters('enableAnalyticsRules'), reference(resourceId('Microsoft.Resources/deploymentScripts', format('enableContentScript-{0}', parameters('utcValue'))), '2020-10-01').outputs.result, 'not enabled')]"
             }
           }
         }
