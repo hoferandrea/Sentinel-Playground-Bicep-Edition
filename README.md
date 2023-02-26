@@ -32,7 +32,7 @@ The following components are deployed/configured:
 - if you need to edit bicep files: [vsc](https://code.visualstudio.com/) with the [official bicep extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep)
 ## deployment
 ### using arm / wizard
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fhoferandrea%2FSentinel-Playground-Bicep-Edition%2Fv1.1%2FmainPlayground.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fhoferandrea%2FSentinel-Playground-Bicep-Edition%2Fv1.1%2FmainPlaygroundUi.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fhoferandrea%2FSentinel-Playground-Bicep-Edition%2Fmain%2FmainPlayground.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fhoferandrea%2FSentinel-Playground-Bicep-Edition%2Fmain%2FmainPlaygroundUi.json)
 
 ### using command line / powershell
 
