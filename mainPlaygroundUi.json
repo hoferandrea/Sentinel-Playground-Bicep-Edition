@@ -56,12 +56,12 @@
 			{
 			"name": "sectionLaSettings",
 			"type": "Microsoft.Common.Section",
-			"label": "Log Analytics Settings",
+			"label": "Log Analytics Workspace Settings",
 			"elements": [
 					{
 						"name": "laRetentionDays",
 						"type": "Microsoft.Common.TextBox",
-						"label": "La Retention Days",
+						"label": "Log Analytics Workspace Retention Days",
 						"defaultValue": "30",
 						"toolTip": "log analytics retention days",
 						"constraints": {
@@ -74,7 +74,7 @@
 					{
 						"name": "laDailyCapGb",
 						"type": "Microsoft.Common.TextBox",
-						"label": "La Daily Cap Gb",
+						"label": "Log Analytics Workspace Daily Cap in GB",
 						"defaultValue": "1",
 						"toolTip": "log analytics daily cap in GB",
 						"constraints": {
