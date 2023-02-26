@@ -22,6 +22,12 @@ param laRetentionDays int = 30
 @description('log analytics daily cap in GB')
 param laDailyCapGb int = 1
 
+@description('enable health monitoring')
+param enableHealthMonitoring bool = true
+
+@description('enable analytics rules from templates')
+param enableAnalyticsRules bool = true
+
 // describe the rg
 module resourceGroup './modules/resourceGroup.bicep' = {
   name: 'resourceGroupDeployment'
@@ -62,6 +68,18 @@ module azureActivityConnector 'modules/dataConnector/azureAcivity.bicep' = {
   }
 }
 
+// describe the m365 defender connector
+module defender365connector 'modules/dataConnector/defender365.bicep' = {
+  name: 'defender365ConnectorDeployment'
+  scope: az.resourceGroup(rgName)
+  dependsOn: [sentinel]
+  params:{
+    logAnalyticsWorkspaceName: laName
+  }
+}
+
+
+
 // describe the taxii connector for e.g. alientvault
 // disabled per default - if you have an api key, change the parameter apiKey/taxii server and enable this module
 /*
@@ -84,6 +102,7 @@ module sentinelConfig 'modules/sentinelConfig.bicep' = {
   dependsOn: [azureActivityConnector, azureActiveDirectoryConnector]
   params:{
     logAnalyticsWorkspaceName: laName
+    enableHealthMonitoring: enableHealthMonitoring
   }
 }
 
@@ -152,6 +171,7 @@ module deyplomentScriptContent 'modules/enableContent/enableContent.bicep' = {
   params:{
     uamiName: playbookUserAssignedManagedIdenity.outputs.uamiName
     laName: laName
+    enableAnalyticsRules: enableAnalyticsRules
   }
 }
 

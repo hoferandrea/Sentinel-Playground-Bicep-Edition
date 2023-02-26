@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.14.46.61228",
-      "templateHash": "18194512688472860473"
+      "version": "0.14.85.62628",
+      "templateHash": "16971019222407400995"
     }
   },
   "parameters": {
@@ -43,6 +43,20 @@
       "metadata": {
         "description": "log analytics daily cap in GB"
       }
+    },
+    "enableHealthMonitoring": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "enable health monitoring"
+      }
+    },
+    "enableAnalyticsRules": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "enable analytics rules from templates"
+      }
     }
   },
   "resources": [
@@ -67,8 +81,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "16832913179024182250"
+              "version": "0.14.85.62628",
+              "templateHash": "14371259532595820705"
             }
           },
           "parameters": {
@@ -119,8 +133,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "7082464807308247937"
+              "version": "0.14.85.62628",
+              "templateHash": "14795695259116646495"
             }
           },
           "parameters": {
@@ -209,14 +223,13 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "17946118411418438132"
+              "version": "0.14.85.62628",
+              "templateHash": "17781028515290147898"
             }
           },
           "parameters": {
             "logAnalyticsWorkspaceName": {
-              "type": "string",
-              "defaultValue": "[format('la-{0}', uniqueString(resourceGroup().id))]"
+              "type": "string"
             }
           },
           "variables": {
@@ -298,8 +311,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "3469597448422397718"
+              "version": "0.14.85.62628",
+              "templateHash": "17780232731019926585"
             }
           },
           "parameters": {
@@ -348,7 +361,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "name": "sentinelConfigDeployment",
+      "name": "defender365ConnectorDeployment",
       "resourceGroup": "[parameters('rgName')]",
       "properties": {
         "expressionEvaluationOptions": {
@@ -366,14 +379,71 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "500005743937991762"
+              "version": "0.14.85.62628",
+              "templateHash": "14441584836303171205"
             }
           },
           "parameters": {
             "logAnalyticsWorkspaceName": {
-              "type": "string",
-              "defaultValue": "la-bicep"
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
+              "apiVersion": "2022-10-01-preview",
+              "name": "[format('{0}/Microsoft.SecurityInsights/Defender365-{1}', parameters('logAnalyticsWorkspaceName'), guid(subscription().tenantId))]",
+              "kind": "MicrosoftThreatProtection",
+              "properties": {
+                "tenantId": "[subscription().tenantId]",
+                "dataTypes": {
+                  "incidents": {
+                    "state": "enabled"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('rgName')), 'Microsoft.Resources/deployments', 'sentinelDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "sentinelConfigDeployment",
+      "resourceGroup": "[parameters('rgName')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logAnalyticsWorkspaceName": {
+            "value": "[parameters('laName')]"
+          },
+          "enableHealthMonitoring": {
+            "value": "[parameters('enableHealthMonitoring')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.14.85.62628",
+              "templateHash": "14857570390440668046"
+            }
+          },
+          "parameters": {
+            "logAnalyticsWorkspaceName": {
+              "type": "string"
+            },
+            "enableHealthMonitoring": {
+              "type": "bool"
             }
           },
           "resources": [
@@ -416,6 +486,29 @@
               "dependsOn": [
                 "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName')), 'Microsoft.SecurityInsights/settings', 'Ueba')]"
               ]
+            },
+            {
+              "condition": "[parameters('enableHealthMonitoring')]",
+              "type": "Microsoft.OperationalInsights/workspaces/providers/settings/providers/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "name": "[format('{0}/Microsoft.SecurityInsights/SentinelHealth/Microsoft.Insights/HealthSettings', parameters('logAnalyticsWorkspaceName'))]",
+              "properties": {
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]",
+                "logs": [
+                  {
+                    "category": "Automation",
+                    "enabled": true
+                  },
+                  {
+                    "category": "DataConnectors",
+                    "enabled": true
+                  },
+                  {
+                    "category": "Analytics",
+                    "enabled": true
+                  }
+                ]
+              }
             }
           ]
         }
@@ -446,8 +539,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "1318989652174312170"
+              "version": "0.14.85.62628",
+              "templateHash": "4927611078696313497"
             }
           },
           "parameters": {
@@ -500,8 +593,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "3529373718059912766"
+              "version": "0.14.85.62628",
+              "templateHash": "4686646136080970387"
             }
           },
           "parameters": {
@@ -560,8 +653,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "5547886848314093693"
+              "version": "0.14.85.62628",
+              "templateHash": "9620939985903169564"
             }
           },
           "parameters": {
@@ -619,8 +712,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "5547886848314093693"
+              "version": "0.14.85.62628",
+              "templateHash": "9620939985903169564"
             }
           },
           "parameters": {
@@ -681,8 +774,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "8538660159240822006"
+              "version": "0.14.85.62628",
+              "templateHash": "15559444100953400454"
             }
           },
           "parameters": {
@@ -799,6 +892,9 @@
           },
           "laName": {
             "value": "[parameters('laName')]"
+          },
+          "enableAnalyticsRules": {
+            "value": "[parameters('enableAnalyticsRules')]"
           }
         },
         "template": {
@@ -807,8 +903,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "11332898477702107128"
+              "version": "0.14.85.62628",
+              "templateHash": "7519609632737236135"
             }
           },
           "parameters": {
@@ -821,13 +917,17 @@
             "utcValue": {
               "type": "string",
               "defaultValue": "[utcNow()]"
+            },
+            "enableAnalyticsRules": {
+              "type": "bool"
             }
           },
           "variables": {
-            "$fxv#0": "#####################################################################################################################################################################################\r\n# andrea[dot]hofer[at]gmail[dot]com / https://www.linkedin.com/in/andrea-hofer-ch/ | 18.02.2023                                                                                     #\r\n#####################################################################################################################################################################################\r\n# orignal script was done by Javier Soriano (MSFT): https://github.com/private/EnableRules.ps1                                                                                      #\r\n# i added some small modifications to support bicep deployments, added more execution output and support for multiple deployments (check if deployed before creating duplicates)    #\r\n#####################################################################################################################################################################################\r\n\r\nparam(\r\n    [Parameter(Mandatory = $true)][string]$ResourceGroup,\r\n    [Parameter(Mandatory = $true)][string]$Workspace,\r\n    [Parameter(Mandatory = $false)][string[]]$Connectors,\r\n    [Parameter(Mandatory = $false)][string[]]$SeveritiesToInclude = @(\"Informational\", \"Low\", \"Medium\", \"High\")\r\n)\r\n\r\n$analyticsRuleCounter = 0\r\n\r\n$context = Get-AzContext  \r\n\r\n\r\n$SubscriptionId = $context.Subscription.Id\r\nWrite-Host \r\nWrite-Host \"Connected to Azure with subscription: $($context.Subscription) with $($context.Account.type) $($context.Account.id)\"\r\n\r\n\r\n$baseUri = \"/subscriptions/${SubscriptionId}/resourceGroups/${ResourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${Workspace}\"\r\n$templatesUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRuleTemplates?api-version=2019-01-01-preview\"\r\n$alertUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRules/\"\r\n\r\n$analyticsRulesUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRules?api-version=2022-11-01\"\r\n\r\n\r\ntry {\r\n    $alertRulesTemplates = ((Invoke-AzRestMethod -Path $templatesUri -Method GET).Content | ConvertFrom-Json).value\r\n    $analyticsRules = ((Invoke-AzRestMethod -Path $analyticsRulesUri -Method GET).Content | ConvertFrom-Json).value\r\n\r\n    Write-Host \"found $($alertRulesTemplates.Count) alert rules templates\"\r\n    Write-Host \"found $($analyticsRulesUri.Count) deployed alert rules\"\r\n}\r\ncatch {\r\n    Write-Verbose $_\r\n    Write-Error \"Unable to get alert rules with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n}\r\n\r\n\r\nif ($Connectors) {\r\n    foreach ($item in $alertRulesTemplates) {\r\n        #Make sure that the rules is not already deployed\r\n        If($analyticsRules.Properties.displayname -notcontains $item.properties.displayName) {\r\n            \r\n            #Make sure that the template's severity is one we want to include\r\n            if ($SeveritiesToInclude.Contains($item.properties.severity)) {\r\n                switch ($item.kind) {\r\n                    \"Scheduled\" {\r\n                        foreach ($connector in $item.properties.requiredDataConnectors) {\r\n                            if ($connector.connectorId -in $Connectors) {\r\n                                #$return += $item.properties\r\n                                $guid = New-Guid\r\n                                $alertUriGuid = $alertUri + $guid + '?api-version=2022-12-01-preview'\r\n\r\n                                $properties = @{\r\n                                    displayName           = $item.properties.displayName\r\n                                    enabled               = $true\r\n                                    suppressionDuration   = \"PT5H\"\r\n                                    suppressionEnabled    = $false\r\n                                    alertRuleTemplateName = $item.name\r\n                                    description           = $item.properties.description\r\n                                    query                 = $item.properties.query\r\n                                    queryFrequency        = $item.properties.queryFrequency\r\n                                    queryPeriod           = $item.properties.queryPeriod\r\n                                    severity              = $item.properties.severity\r\n                                    tactics               = $item.properties.tactics\r\n                                    triggerOperator       = $item.properties.triggerOperator\r\n                                    triggerThreshold      = $item.properties.triggerThreshold\r\n                                    techniques            = $item.properties.techniques\r\n                                    eventGroupingSettings = $item.properties.eventGroupingSettings\r\n                                    templateVersion       = $item.properties.version\r\n                                    entityMappings        = $item.properties.entityMappings\r\n                                }\r\n\r\n                                $alertBody = @{}\r\n                                $alertBody | Add-Member -NotePropertyName kind -NotePropertyValue $item.kind -Force\r\n                                $alertBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n                                try {\r\n                                    \"enable $($item.properties.displayName)\"\r\n                                    $result = Invoke-AzRestMethod -Path $alertUriGuid -Method PUT -Payload ($alertBody | ConvertTo-Json -Depth 3)\r\n                                    \"result: $($result.StatusCode)\"\r\n                                    $analyticsRuleCounter++\r\n                                }\r\n                                catch {\r\n                                    Write-Host \"Can't enable rule template with connectors: \" $item.properties.requiredDataConnectors\r\n                                    Write-Verbose $_\r\n                                    Write-Error \"Unable to create alert rule with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n                                }\r\n\r\n                                break\r\n                            }\r\n                        }\r\n                    }\r\n                    \"NRT\" {\r\n                        foreach ($connector in $item.properties.requiredDataConnectors) {\r\n                            if ($connector.connectorId -in $Connectors) {\r\n                                #$return += $item.properties\r\n                                $guid = New-Guid\r\n                                $alertUriGuid = $alertUri + $guid + '?api-version=2022-12-01-preview'\r\n\r\n                                $properties = @{\r\n                                    displayName           = $item.properties.displayName\r\n                                    enabled               = $true\r\n                                    suppressionDuration   = \"PT5H\"\r\n                                    suppressionEnabled    = $false\r\n                                    alertRuleTemplateName = $item.name\r\n                                    description           = $item.properties.description\r\n                                    query                 = $item.properties.query\r\n                                    severity              = $item.properties.severity\r\n                                    tactics               = $item.properties.tactics\r\n                                    techniques            = $item.properties.techniques\r\n                                    eventGroupingSettings = $item.properties.eventGroupingSettings\r\n                                    templateVersion       = $item.properties.version\r\n                                    entityMappings        = $item.properties.entityMappings\r\n                                }\r\n\r\n                                $alertBody = @{}\r\n                                $alertBody | Add-Member -NotePropertyName kind -NotePropertyValue $item.kind -Force\r\n                                $alertBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n                                try {\r\n                                    \"enable $($item.properties.displayName)\"\r\n                                    $result = Invoke-AzRestMethod -Path $alertUriGuid -Method PUT -Payload ($alertBody | ConvertTo-Json -Depth 3)\r\n                                    \"result: $($result.StatusCode)\"\r\n                                    $analyticsRuleCounter++\r\n                                }\r\n                                catch {\r\n                                    Write-Host \"Can't enable rule template with connectors: \" $item.properties.requiredDataConnectors\r\n                                    Write-Verbose $_\r\n                                    Write-Error \"Unable to create alert rule with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n                                }\r\n\r\n                                break\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        } else {\r\n            Write-Host \"rule $($item.properties.displayName) already deployed\"\r\n        }\r\n    \r\n    }\r\n}\r\n\r\n# create output\r\n$DeploymentScriptOutputs = @{}\r\n$DeploymentScriptOutputs[\"result\"] = \"$analyticsRuleCounter analytics rules enabled.\""
+            "$fxv#0": "#####################################################################################################################################################################################\r\n# Andrea Hofer - https://www.linkedin.com/in/andrea-hofer-ch/ | 18.02.2023                                                                                     #\r\n#####################################################################################################################################################################################\r\n# enables analytics rules from templates considering defined connectors\r\n# original EnableRules.ps1 by Javier Soriano: https://github.com/javiersoriano/sentinel-all-in-one/blob/master/ARMTemplates/Scripts/EnableRules.ps1                                 #\r\n# i added some small modifications to add more execution output and support for multiple deployments (check if deployed before creating duplicates)                                 #\r\n#####################################################################################################################################################################################\r\n\r\nparam(\r\n    [Parameter(Mandatory = $true)][string]$ResourceGroup,\r\n    [Parameter(Mandatory = $true)][string]$Workspace,\r\n    [Parameter(Mandatory = $false)][string[]]$Connectors,\r\n    [Parameter(Mandatory = $false)][string[]]$SeveritiesToInclude = @(\"Informational\", \"Low\", \"Medium\", \"High\")\r\n)\r\n\r\n$analyticsRuleCounter = 0\r\n\r\n$context = Get-AzContext  \r\n\r\n$SubscriptionId = $context.Subscription.Id\r\nWrite-Host \"Connected to Azure with subscription: $($context.Subscription) with $($context.Account.type) $($context.Account.id)\"\r\n\r\n\r\n$baseUri = \"/subscriptions/${SubscriptionId}/resourceGroups/${ResourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${Workspace}\"\r\n$templatesUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRuleTemplates?api-version=2019-01-01-preview\"\r\n$alertUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRules/\"\r\n\r\n$analyticsRulesUri = \"$baseUri/providers/Microsoft.SecurityInsights/alertRules?api-version=2022-11-01\"\r\n\r\n\r\ntry {\r\n    Write-Host \"get analytics rules templates...\"\r\n    $alertRulesTemplates = ((Invoke-AzRestMethod -Path $templatesUri -Method GET).Content | ConvertFrom-Json).value\r\n\r\n    Write-Host \"get already deployed analytics rules...\"\r\n    $analyticsRules = ((Invoke-AzRestMethod -Path $analyticsRulesUri -Method GET).Content | ConvertFrom-Json).value\r\n\r\n    Write-Host \"found $($alertRulesTemplates.Count) analytics rules templates\"\r\n    Write-Host \"found $($analyticsRules.Count) deployed analytics rules\"\r\n}\r\ncatch {\r\n    Write-Verbose $_\r\n    Write-Error \"Unable to get analytics rules with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n}\r\n\r\nif ($Connectors) {\r\n    foreach ($item in $alertRulesTemplates) {\r\n        #Make sure that the rules is not already deployed\r\n        If($analyticsRules.Properties.displayname -notcontains $item.properties.displayName) {\r\n            \r\n            #Make sure that the template's severity is one we want to include\r\n            if ($SeveritiesToInclude.Contains($item.properties.severity)) {\r\n                switch ($item.kind) {\r\n                    \"Scheduled\" {\r\n                        foreach ($connector in $item.properties.requiredDataConnectors) {\r\n                            if ($connector.connectorId -in $Connectors) {\r\n                                Write-Host \"##############################################################################\"\r\n                                #$return += $item.properties\r\n                                $guid = New-Guid\r\n                                $alertUriGuid = $alertUri + $guid + '?api-version=2022-12-01-preview'\r\n\r\n                                $properties = @{\r\n                                    displayName           = $item.properties.displayName\r\n                                    enabled               = $true\r\n                                    suppressionDuration   = \"PT5H\"\r\n                                    suppressionEnabled    = $false\r\n                                    alertRuleTemplateName = $item.name\r\n                                    description           = $item.properties.description\r\n                                    query                 = $item.properties.query\r\n                                    queryFrequency        = $item.properties.queryFrequency\r\n                                    queryPeriod           = $item.properties.queryPeriod\r\n                                    severity              = $item.properties.severity\r\n                                    tactics               = $item.properties.tactics\r\n                                    triggerOperator       = $item.properties.triggerOperator\r\n                                    triggerThreshold      = $item.properties.triggerThreshold\r\n                                    techniques            = $item.properties.techniques\r\n                                    eventGroupingSettings = $item.properties.eventGroupingSettings\r\n                                    templateVersion       = $item.properties.version\r\n                                    entityMappings        = $item.properties.entityMappings\r\n                                }\r\n\r\n                                $alertBody = @{}\r\n                                $alertBody | Add-Member -NotePropertyName kind -NotePropertyValue $item.kind -Force\r\n                                $alertBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n                                try {\r\n                                    Write-Host \"enable scheduled rule $($item.properties.displayName)\"\r\n                                    $result = Invoke-AzRestMethod -Path $alertUriGuid -Method PUT -Payload ($alertBody | ConvertTo-Json -Depth 3)\r\n\r\n                                    If($result.StatusCode -eq 200)\r\n                                    {\r\n                                        Write-Host \"rule successfully enabled.\"\r\n                                        $analyticsRuleCounter++\r\n                                    }\r\n                                    else {\r\n                                        Write-Host \"rule $($item.properties.displayName) was not enabled. status code: $($result.StatusCode). content: $($result.Content).\"\r\n                                    }\r\n\r\n                                    \r\n                                }\r\n                                catch {\r\n                                    Write-Host \"Can't enable rule template with connectors: \" $item.properties.requiredDataConnectors\r\n                                    Write-Verbose $_\r\n                                    Write-Error \"Unable to create alert rule with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n                                }\r\n\r\n                                break\r\n                            }\r\n                        }\r\n                    }\r\n                    \"NRT\" {\r\n                        foreach ($connector in $item.properties.requiredDataConnectors) {\r\n                            if ($connector.connectorId -in $Connectors) {\r\n                                Write-Host \"##############################################################################\"\r\n                                #$return += $item.properties\r\n                                $guid = New-Guid\r\n                                $alertUriGuid = $alertUri + $guid + '?api-version=2022-12-01-preview'\r\n\r\n                                $properties = @{\r\n                                    displayName           = $item.properties.displayName\r\n                                    enabled               = $true\r\n                                    suppressionDuration   = \"PT5H\"\r\n                                    suppressionEnabled    = $false\r\n                                    alertRuleTemplateName = $item.name\r\n                                    description           = $item.properties.description\r\n                                    query                 = $item.properties.query\r\n                                    severity              = $item.properties.severity\r\n                                    tactics               = $item.properties.tactics\r\n                                    techniques            = $item.properties.techniques\r\n                                    eventGroupingSettings = $item.properties.eventGroupingSettings\r\n                                    templateVersion       = $item.properties.version\r\n                                    entityMappings        = $item.properties.entityMappings\r\n                                }\r\n\r\n                                $alertBody = @{}\r\n                                $alertBody | Add-Member -NotePropertyName kind -NotePropertyValue $item.kind -Force\r\n                                $alertBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n                                try {\r\n                                    Write-Host \"enable nrt rule $($item.properties.displayName)\"\r\n                                    $result = Invoke-AzRestMethod -Path $alertUriGuid -Method PUT -Payload ($alertBody | ConvertTo-Json -Depth 3)\r\n\r\n                                    If($result.StatusCode -eq 200)\r\n                                    {\r\n                                        Write-Host \"rule successfully enabled.\"\r\n                                        $analyticsRuleCounter++\r\n                                    }\r\n                                    else {\r\n                                        Write-Host \"rule $($item.properties.displayName) was not enabled. status code: $($result.StatusCode). content: $($result.Content).\"\r\n                                    }\r\n                                }\r\n                                catch {\r\n                                    Write-Host \"Can't enable rule template with connectors: \" $item.properties.requiredDataConnectors\r\n                                    Write-Verbose $_\r\n                                    Write-Error \"Unable to create alert rule with error code: $($_.Exception.Message)\" -ErrorAction Stop\r\n                                }\r\n\r\n                                break\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        } else {\r\n            Write-Host \"rule $($item.properties.displayName) already deployed - skip\"\r\n        }\r\n    \r\n    }\r\n}\r\n\r\n# create output\r\n$DeploymentScriptOutputs = @{}\r\n$DeploymentScriptOutputs[\"result\"] = \"$analyticsRuleCounter analytics rules enabled.\""
           },
           "resources": [
             {
+              "condition": "[parameters('enableAnalyticsRules')]",
               "type": "Microsoft.Resources/deploymentScripts",
               "apiVersion": "2020-10-01",
               "name": "[format('enableContentScript-{0}', parameters('utcValue'))]",
@@ -851,7 +951,7 @@
           "outputs": {
             "enableContentResult": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', format('enableContentScript-{0}', parameters('utcValue'))), '2020-10-01').outputs.result]"
+              "value": "[if(parameters('enableAnalyticsRules'), reference(resourceId('Microsoft.Resources/deploymentScripts', format('enableContentScript-{0}', parameters('utcValue'))), '2020-10-01').outputs.result, 'not enabled')]"
             }
           }
         }
@@ -885,8 +985,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "7177411906626449860"
+              "version": "0.14.85.62628",
+              "templateHash": "18181591416130708530"
             }
           },
           "parameters": {
@@ -902,7 +1002,7 @@
             }
           },
           "variables": {
-            "$fxv#0": "#################################################################################################################################################################################################\r\n# andrea[dot]hofer[at]gmail[dot]com / https://www.linkedin.com/in/andrea-hofer-ch/ | 19.02.2023                                                                                                 #\r\n#################################################################################################################################################################################################\r\n# based on the enableRules script by Javier Soriano (MSFT): https://private/EnableRules.ps1                                                                                                     #       \r\n#################################################################################################################################################################################################\r\n\r\nparam(\r\n    [Parameter(Mandatory = $true)][string]$ResourceGroup,\r\n    [Parameter(Mandatory = $true)][string]$Workspace\r\n)\r\n\r\n$context = Get-AzContext  \r\n\r\n$SubscriptionId = $context.Subscription.Id\r\nWrite-Host \r\nWrite-Host \"Connected to Azure with subscription: $($context.Subscription) with $($context.Account.type) $($context.Account.id)\"\r\n\r\n# build incident url\r\n$inicdentUri = \"/subscriptions/${SubscriptionId}/resourceGroups/${ResourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${Workspace}/providers/Microsoft.SecurityInsights/incidents/$(New-Guid)?api-version=2022-11-01\"\r\n\r\n# build incident\r\n$properties = @{\r\n    title                       = \"Welcome to the Sentinel Playground!\"\r\n    description                 = \"Have fun and happy testing.\"\r\n    severity                    = \"High\"\r\n    status                      = \"New\"\r\n}\r\n\r\n$incidentBody = @{}\r\n$incidentBody | Add-Member -NotePropertyName etag -NotePropertyValue \"0300bf09-0000-0000-0000-5c37296e0000\"\r\n$incidentBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n# put incident\r\n$result = Invoke-AzRestMethod -Path $inicdentUri -Method PUT -Payload ($incidentBody | ConvertTo-Json -Depth 3)\r\n$convertedResult = $result.Content | ConvertFrom-Json\r\nWrite-Host \"incident $($convertedResult.properties.incidentNumber) created.\"\r\n\r\n# create output\r\n$DeploymentScriptOutputs = @{}\r\n$DeploymentScriptOutputs[\"result\"] = \"incident $($convertedResult.properties.incidentNumber) created.\""
+            "$fxv#0": "#######################################################################################################################################\r\n# Andrea Hofer - https://www.linkedin.com/in/andrea-hofer-ch/ | 19.02.2023                                       #\r\n#######################################################################################################################################\r\n# creates and incident using the SecurityInsights/incidents endpoint                                                                  #       \r\n#######################################################################################################################################\r\n\r\nparam(\r\n    [Parameter(Mandatory = $true)][string]$ResourceGroup,\r\n    [Parameter(Mandatory = $true)][string]$Workspace\r\n)\r\n\r\n$context = Get-AzContext  \r\n\r\n$SubscriptionId = $context.Subscription.Id\r\nWrite-Host \"Connected to Azure with subscription: $($context.Subscription) with $($context.Account.type) $($context.Account.id)\"\r\n\r\n# build incident url\r\n$inicdentUri = \"/subscriptions/${SubscriptionId}/resourceGroups/${ResourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${Workspace}/providers/Microsoft.SecurityInsights/incidents/$(New-Guid)?api-version=2022-11-01\"\r\n\r\n# build incident\r\n$properties = @{\r\n    title                       = \"Welcome to the Sentinel Playground!\"\r\n    description                 = \"Have fun and happy testing.\"\r\n    severity                    = \"High\"\r\n    status                      = \"New\"\r\n}\r\n\r\n$incidentBody = @{}\r\n$incidentBody | Add-Member -NotePropertyName etag -NotePropertyValue \"0300bf09-0000-0000-0000-5c37296e0000\"\r\n$incidentBody | Add-Member -NotePropertyName properties -NotePropertyValue $properties\r\n\r\n# put incident\r\n$result = Invoke-AzRestMethod -Path $inicdentUri -Method PUT -Payload ($incidentBody | ConvertTo-Json -Depth 3)\r\n$convertedResult = $result.Content | ConvertFrom-Json\r\nWrite-Host \"incident $($convertedResult.properties.incidentNumber) created.\"\r\n\r\n# create output\r\n$DeploymentScriptOutputs = @{}\r\n$DeploymentScriptOutputs[\"result\"] = \"incident with number $($convertedResult.properties.incidentNumber) created.\""
           },
           "resources": [
             {
@@ -960,8 +1060,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.14.46.61228",
-              "templateHash": "12186201177297986625"
+              "version": "0.14.85.62628",
+              "templateHash": "5486894042180747383"
             }
           },
           "parameters": {
@@ -991,8 +1091,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.14.46.61228",
-                      "templateHash": "11041843090009156916"
+                      "version": "0.14.85.62628",
+                      "templateHash": "5936793082619797429"
                     }
                   },
                   "parameters": {
@@ -1058,8 +1158,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.14.46.61228",
-                      "templateHash": "11276521783897076366"
+                      "version": "0.14.85.62628",
+                      "templateHash": "6584322126844222719"
                     }
                   },
                   "parameters": {
@@ -1130,8 +1230,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.14.46.61228",
-                      "templateHash": "4321860727672257426"
+                      "version": "0.14.85.62628",
+                      "templateHash": "14288886237037521978"
                     }
                   },
                   "variables": {
@@ -1198,8 +1298,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.14.46.61228",
-                      "templateHash": "1742080971323871730"
+                      "version": "0.14.85.62628",
+                      "templateHash": "11961491218776523237"
                     }
                   },
                   "parameters": {
@@ -1271,8 +1371,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.14.46.61228",
-                      "templateHash": "4900895735596273196"
+                      "version": "0.14.85.62628",
+                      "templateHash": "6118865529696749326"
                     }
                   },
                   "parameters": {
@@ -1281,7 +1381,7 @@
                     }
                   },
                   "variables": {
-                    "$fxv#0": "header1,header2,header3\r\nthis,is,sparta\r\n42,is,key",
+                    "$fxv#0": "header1,header2,header3\r\nthis,is,sparta\r\n42,is,answer",
                     "displayName": "Playground Watchlist",
                     "description": "Watchlist queried by xxx",
                     "searchKey": "header3",
@@ -1309,6 +1409,58 @@
                         "numberOfLinesToSkip": 0,
                         "itemsSearchKey": "[variables('searchKey')]",
                         "rawContent": "[format('{0}', variables('$fxv#0'))]"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "workbookDeployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "workspace": {
+                    "value": "[parameters('logAnalyticsWorkspaceName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.14.85.62628",
+                      "templateHash": "14939132385096567357"
+                    }
+                  },
+                  "parameters": {
+                    "workspace": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "workbookDisplayName": "Playground Workbook",
+                    "sourceId": "[format('/subscriptions/{0}/resourcegroups/{1}/providers/microsoft.operationalinsights/workspaces/{2}', subscription().id, resourceGroup().name, parameters('workspace'))]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Insights/workbooks",
+                      "apiVersion": "2021-03-08",
+                      "name": "[guid(variables('workbookDisplayName'))]",
+                      "location": "[resourceGroup().location]",
+                      "kind": "shared",
+                      "properties": {
+                        "displayName": "[variables('workbookDisplayName')]",
+                        "serializedData": "[format('{{\"version\":\"Notebook/1.0\",\"items\":[{{\"type\":1,\"content\":{{\"json\":\"## Playground workbook Template\\n---\\n\\nThis is the default new workbook query:\"}},\"name\":\"text - 2\"}},{{\"type\":3,\"content\":{{\"version\":\"KqlItem/1.0\",\"query\":\"union withsource=_TableName *\\n| summarize Count=count() by _TableName\\n| render barchart\",\"size\":1,\"queryType\":0,\"resourceType\":\"microsoft.operationalinsights/workspaces\"}},\"name\":\"query - 2\"}}],\"isLocked\":false,\"fallbackResourceIds\":[\"{0}\"],\"fromTemplateId\":\"sentinel-UserWorkbook\"}}', variables('sourceId'))]",
+                        "version": "1.0",
+                        "category": "sentinel",
+                        "sourceId": "[variables('sourceId')]"
                       }
                     }
                   ]

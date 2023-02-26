@@ -1,4 +1,4 @@
-param logAnalyticsWorkspaceName string = 'la-${uniqueString(resourceGroup().id)}'
+param logAnalyticsWorkspaceName string
 
 // reference the log analytics workspace
 resource workspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {

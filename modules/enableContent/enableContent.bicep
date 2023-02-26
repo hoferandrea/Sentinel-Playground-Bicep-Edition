@@ -1,6 +1,7 @@
 param uamiName string
 param laName string
 param utcValue string = utcNow()
+param enableAnalyticsRules bool
 
 // reference the user-assigned managed identity
 resource userAssignedManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
@@ -10,7 +11,7 @@ resource userAssignedManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIden
 }
 
 // use the current time in the name, otherwise the script isn't triggered again 
-resource enableContentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+resource enableContentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = if(enableAnalyticsRules) {
   name: 'enableContentScript-${utcValue}'
   location: resourceGroup().location
   kind: 'AzurePowerShell'
@@ -29,4 +30,4 @@ resource enableContentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' 
   }
 }
 
-output enableContentResult string = enableContentScript.properties.outputs.result
+output enableContentResult string = enableAnalyticsRules ? enableContentScript.properties.outputs.result : 'not enabled'

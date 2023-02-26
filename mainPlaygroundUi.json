@@ -1,0 +1,144 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Azure.CreateUIDef",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "resourceTypes": [],
+        "basics": [
+			{
+			"name": "sectionBasic",
+			"type": "Microsoft.Common.Section",
+			"label": "Basic Settings",
+			"elements": [
+					{
+						"name": "rgName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Resource Group Name",
+						"defaultValue": "rg-sentinel-playground-01",
+						"toolTip": "resource group name",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					},
+					{
+						"name": "laName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Log Analytics Workspace Name",
+						"defaultValue": "la-sentinel-playground-01",
+						"toolTip": "log analytics workspace name",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					},
+					{
+						"name": "uamiName",
+						"type": "Microsoft.Common.TextBox",
+						"label": "user-assigned Managed Identity Name",
+						"defaultValue": "mi-sentinel-playbooks",
+						"toolTip": "user assigned managed identity name",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					}
+			],
+			"visible": true
+		
+			},
+			{
+			"name": "sectionLaSettings",
+			"type": "Microsoft.Common.Section",
+			"label": "Log Analytics Workspace Settings",
+			"elements": [
+					{
+						"name": "laRetentionDays",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Log Analytics Workspace Retention Days",
+						"defaultValue": "30",
+						"toolTip": "log analytics retention days",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					},
+					{
+						"name": "laDailyCapGb",
+						"type": "Microsoft.Common.TextBox",
+						"label": "Log Analytics Workspace Daily Cap in GB",
+						"defaultValue": "1",
+						"toolTip": "log analytics daily cap in GB",
+						"constraints": {
+							"required": false,
+							"regex": "",
+							"validationMessage": ""
+						},
+						"visible": true
+					}
+			],
+			"visible": true
+			},
+			{
+			"name": "sectionSentinelSettings",
+			"type": "Microsoft.Common.Section",
+			"label": "Sentinel Settings",
+			"elements": [
+				{
+					"name": "enableHealthMonitoring",
+					"type": "Microsoft.Common.CheckBox",
+					"label": "Enable Health Monitoring",
+					"defaultValue": "true",
+					"toolTip": "enable health monitoring",
+					"constraints": {
+						"required": false
+						
+					},
+					"visible": true
+				}
+			],
+			"visible": true
+			},
+
+			{
+			"name": "sectionContent",
+			"type": "Microsoft.Common.Section",
+			"label": "Content Settings",
+			"elements": [
+				{
+					"name": "enableAnalyticsRules",
+					"type": "Microsoft.Common.CheckBox",
+					"label": "Enable Analytics Rules",
+					"defaultValue": "true",
+					"toolTip": "enable analytics rules from templates",
+					"constraints": {
+						"required": false
+						
+					},
+					"visible": true
+				}
+			],
+			"visible": true
+			}
+
+        ],
+        "steps": [],
+        "outputs": {
+            "rgName": "[steps('basics').sectionBasic.rgName]",
+            "laName": "[steps('basics').sectionBasic.laName]",
+            "uamiName": "[steps('basics').sectionBasic.uamiName]",
+            "laRetentionDays": "[steps('basics').sectionLaSettings.laRetentionDays]",
+            "laDailyCapGb": "[steps('basics').sectionLaSettings.laDailyCapGb]",
+            "enableHealthMonitoring": "[steps('basics').sectionSentinelSettings.enableHealthMonitoring]",
+            "enableAnalyticsRules": "[steps('basics').sectionContent.enableAnalyticsRules]"
+        }
+    }
+}
