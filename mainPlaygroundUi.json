@@ -132,13 +132,13 @@
         ],
         "steps": [],
         "outputs": {
-            "rgName": "[basics.sectionBasic('rgName')]",
-            "laName": "[basics.sectionBasic('laName')]",
-            "uamiName": "[basics.sectionBasic('uamiName')]",
-            "laRetentionDays": "[basics.sectionLaSettings('laRetentionDays')]",
-            "laDailyCapGb": "[basics.sectionLaSettings('laDailyCapGb')]",
-            "enableHealthMonitoring": "[basics.sectionSentinelSettings('enableHealthMonitoring')]",
-            "enableAnalyticsRules": "[basics.sectionContent('enableAnalyticsRules')]"
+            "rgName": "[basics.sectionBasic.rgName]",
+            "laName": "[basics.sectionBasic.laName]",
+            "uamiName": "[basics.sectionBasic.uamiName]",
+            "laRetentionDays": "[basics.sectionLaSettings.laRetentionDays]",
+            "laDailyCapGb": "[basics.sectionLaSettings.laDailyCapGb]",
+            "enableHealthMonitoring": "[basics.sectionSentinelSettings.enableHealthMonitoring]",
+            "enableAnalyticsRules": "[basics.sectionContent.enableAnalyticsRules]"
         }
     }
 }
