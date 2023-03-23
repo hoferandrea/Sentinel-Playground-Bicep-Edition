@@ -1,3 +1,12 @@
+/*
+Template Version: 1.1
+Autor: Andrea Hofer
+Date: 23.03.2023
+
+Special Remarks:
+This template uses Custom Details to Tag Incidents (stable/experimental) using an automation rule.
+*/
+
 // workspace name (automatically assigned during sentinel content deployment)
 param workspace string
 
@@ -11,8 +20,11 @@ var ruleName = 'Playground Analytics Rule'
 var description = 'Description'
 var severity = 'Informational'
 // dont remove the multiline string (''') - this way, the query formatting is preserved
-var query = '''SigninLogs
+var query = '''
+SigninLogs
 | take 1
+| extend ContentProvider='HoferLabsAG'
+| extend ContentStatus='experimental'
 '''
 
 resource symbolicname 'Microsoft.SecurityInsights/alertRules@2022-10-01-preview' = {
@@ -20,22 +32,25 @@ resource symbolicname 'Microsoft.SecurityInsights/alertRules@2022-10-01-preview'
     kind: 'Scheduled'
     scope: logAnalyticsWorkspace
     properties: {
-      customDetails: {}
-      description: description
       displayName: ruleName
+      description: description
+      severity: severity
+      query: query
       enabled: true
-      alertRuleTemplateName: null // important if you want to update to update from the analytics template (preview)
-      templateVersion: null // important if you want to update to update from the analytics template (preview)
+      customDetails: {
+        ContentProvider: 'ContentProvider'
+        ContentStatus: 'ContentStatus'
+      }
+      alertRuleTemplateName: null
+      templateVersion: null
       eventGroupingSettings: {
         aggregationKind: 'SingleAlert'
       }
       incidentConfiguration: {
         createIncident: true
       }
-      query: query
       queryFrequency: 'PT5H'
       queryPeriod: 'PT5H'
-      severity: severity
       suppressionDuration: 'PT5H'
       suppressionEnabled: false
       tactics: [
