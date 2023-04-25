@@ -1,58 +1,59 @@
-# intro
-Sentinel playground is a project that aims to speed up deployment and configuration tasks of a sentinel lab/demo environment, including sample content. This project seeks to use bicep only.
+# Intro
+Sentinel Playground is a project that aims to speed up deployment and configuration tasks of a Sentinel Lab/Demo environment, including sample content and Bicep Templates. This project seeks to use Bicep only.
 
-## feedback / contributions / bugs / feature requests
+## Feedback / Contributions / Bugs / Feature requests
 Everyone is welcome to contribute / provide feedback / request features / report bugs / whatever -> create an issue or contact me directly: https://www.linkedin.com/in/andrea-hofer-ch/
 
 
-# sentinel playground - **bicep edition**
-## overview
-The following components are deployed/configured:
+# Sentinel Playground - **Bicep Edition**
+## Overview
+The following components can be deployed/configured:
 - resource group
-- log analytics workspace + sentinel solution
-- log analytics workspace config (retention, daily cap)
-- sentinel config (ueba, anomalies)
-- data connectors
-    - azure activity
-    - azure ad 
-    - defender 365 incidents
-- demo playbook (with a user-assigned managed identity + required permissions)
-- sentinel permissions to trigger playbooks
-- analytics rule (template)
-- automation rule (template)
-- log query (in a query pack) (template)
-- watchlist (with CSV-support) (template)
-- all analytics rules for azure ad and azure activities are enabled
+- Log Analytics workspace + Sentinel solution
+- Log Analytics workspace config (retention, daily cap)
+- Sentinel config (UEBA, Anomalies)
+- Setninel data connectors
+    - Azure Activity
+    - Azure Active Directory
+    - Defender 365 incidents
+- demo playbook (with a user-assigned Managed Identity + required permissions)
+- Sentinel permissions to trigger playbooks
+- Sentinel Content (including Bicep templates)
+    - analytics rule
+    - automation rule
+    - log query (in a query pack)
+    - watchlist (with CSV-support)
+- all analytics rules for Azure Activity and Azure Active Directory are enabled
 
-## preparation
+## Preparation
 - make sure that you have the resource provider microsoft.insights registered (subscription -> resource providers)
 - make sure that you have less than 5 aad diagnostic settings configured (5 is max)
-- [az cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) installed (check with `az --help`) or equivalent powershell module
-- if you need to build arm from bicep: az bicep module installed (check with `az bicep --help`, inlcluded in newer az releases)
-- if you need to edit bicep files: [vsc](https://code.visualstudio.com/) with the [official bicep extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep)
-## deployment
-### using arm / wizard
+- if you need to build ARM from Bicep: az bicep module installed (check with `az bicep --help`, inlcluded in newer az releases)
+- if you need to edit Bicep files: [vsc](https://code.visualstudio.com/) with the [official bicep extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep)
+## Deployment
+### using ARM / UI wizard **[recommended]**
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fhoferandrea%2FSentinel-Playground-Bicep-Edition%2Fmain%2FmainPlayground.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fhoferandrea%2FSentinel-Playground-Bicep-Edition%2Fmain%2FmainPlaygroundUi.json)
 
-### using command line / powershell
+### using CLI / Powershell
 
 download the latest release (on the right)
 
-deploy either with default parameters (laName=la-sentinel-playground-01, rgName=rg-sentinel-playground-01)
+and deploy either with default parameters (laName=la-sentinel-playground-01, rgName=rg-sentinel-playground-01)
 ```
 az deployment sub create --template-file .\mainPlayground.bicep --location switzerlandnorth
 ```
-or deploy with custom parameters:
+or  with custom parameters:
 - **rgName:** resource group name *-> rg-sentinel-playground-01*
 - **laName:** log analytics workspace name *-> la-sentinel-playground-01*
 - **uamiName:** name of the user-assigned managed identity (used in playbook) *-> mi-sentinel-playbooks*
 - **laRetentionDays:** log analytics workspace retention in days *-> 30*
 - **laDailyCapGb:** log analytics workspace daily cap in GB (only integers are supported) *-> 1*
+
+-> check the heading of the Bicep File for more parameters as more are added in the future.
 ```
 az deployment sub create --template-file .\mainPlayground.bicep --location switzerlandnorth --parameters rgName=rg-sentinel-playground-01 laName=la-sentinel-playground-01 uamiName=mi-sentinel-playbooks laRetentionDays=30 laDailyCapGb=1
 ```
 
-you can also deploy the prebuilt arm file (mainInfra.json) directly in azure using 'Deploy a custom template'
 
 to check progress: go to your subscription -> depyloments -> mainPlayground:
 
