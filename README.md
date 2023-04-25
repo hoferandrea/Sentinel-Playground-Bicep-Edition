@@ -62,17 +62,17 @@ to check progress: go to your subscription -> depyloments -> mainPlayground:
 ![deployment progress output](doc/images/infraDeploymentOutputs.png)
 
 
-## post deployment checks
+## Post deployment checks
 - create a new incident, trigger the playbook "la-sentinel-addCommentToIncident" -> check if comment is added
 - check data connectors (should take ~10min until events are received)
 - check sentinel config (ueba, anomalies)
 
-## update the infra
+## Update the infra
 change code/parameters (e.g. log analytics retention days), redeploy with the same commands as in previous deployment -> the infra gets updated.
 
 check the "faq / limitations / bugs" bugs chapter...
 
-## useful commands
+## Useful commands
 delete created resource group (with all resources in it)
 ```
 az group delete --name rg-sentinel-playground-01 --yes
@@ -92,8 +92,9 @@ build arm from bicep (not really needed)
 az bicep build --file .\sentinelInfra\mainInfra.bicep
 ```
 
-## faq / limitations / bugs
+## Faq / limitations / bugs
 - if you rerun the deployment (to update the infra), the deployment of the sentinel config EntitiyAnalystics resource fails with "Bad Request: Update request should provide ETag". Other resources get updated. This is a known API issue: https://github.com/Azure/bicep/issues/9206 (https://github.com/Azure/bicep/issues/5256 / https://techcommunity.microsoft.com/t5/azure-observability/update-saved-search/m-p/328553). 
 
-# to do
-- ~~replace this "to do" list with github issues :)~~ -> check/create issues for bugs / features requests / ...
+# Credits
+- Enable Content / Analytics Rules: I modified the script from [Javier Soriano
+](https://github.com/javiersoriano/sentinel-all-in-one/blob/master/ARMTemplates/Scripts/EnableRules.ps1) to allow redployments. 
