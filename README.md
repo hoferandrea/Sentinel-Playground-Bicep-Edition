@@ -4,6 +4,8 @@ Sentinel Playground is a project that aims to speed up deployment and configurat
 ## Feedback / Contributions / Bugs / Feature requests
 Everyone is welcome to contribute / provide feedback / request features / report bugs / whatever -> create an issue or contact me directly: https://www.linkedin.com/in/andrea-hofer-ch/
 
+Related blog post: https://hoferlabs.ch/2023/04/25/Sentinel-Playground-Bicep-Edition/
+
 
 # Sentinel Playground - **Bicep Edition**
 ## Overview
@@ -22,6 +24,7 @@ The following components can be deployed/configured:
     - analytics rule
     - automation rule
     - log query (in a query pack)
+    - log functions
     - watchlist (with CSV-support)
 - all analytics rules for Azure Activity and Azure Active Directory are enabled
 
