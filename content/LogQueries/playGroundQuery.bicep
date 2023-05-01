@@ -1,3 +1,12 @@
+/*
+Template Version: 1.1
+Autor: Andrea Hofer
+Date: 23.03.2023
+
+Special Remarks:
+- query pack get automatically created if doesn't exist
+*/
+
 // name of the query pack
 var defaultQueryPackName = 'playGroundQueryPack'
 

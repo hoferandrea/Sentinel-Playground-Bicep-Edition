@@ -1,3 +1,12 @@
+/*
+Template Version: 1.1
+Autor: Andrea Hofer
+Date: 23.03.2023
+
+Special Remarks:
+- n/a 
+*/
+
 // workspace name (automatically assigned during sentinel content deployment)
 param workspace string
 

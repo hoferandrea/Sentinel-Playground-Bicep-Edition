@@ -16,8 +16,8 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06
 }
 
 // function properties (edit)
-var functionName = 'xunionSecurityIncident'
-var functionCategory = 'SocDashboard'
+var functionName = 'playGroundFunction'
+var functionCategory = 'playGround'
 var query = '''
 SigninLogs
 | take 1010
