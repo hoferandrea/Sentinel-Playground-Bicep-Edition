@@ -24,6 +24,15 @@ module anaylticsRule 'AnalyticsRules/playGroundAnalyticsRule.bicep' = {
   }
 }
 
+// deploy log functions
+module logFunction 'LogFunctions/playGroundLogFunction.bicep' = {
+  name: 'logFunctionDeployment'
+  scope: resourceGroup()
+  params:{
+    workspace: workspace.name
+  }
+}
+
 // deploy queries (in a query pack)
 module queryPack 'LogQueries/playGroundQuery.bicep' = {
   name: 'queryPackDeployment'
