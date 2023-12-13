@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.23.1.45101",
+      "templateHash": "16867872967031209693"
+    }
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "$fxv#0": "header1,header2,header3\r\nloaded,from,csv\r\nusing,bicep,loadcontent\r\n",
+    "displayName": "Playground Watchlist",
+    "description": "Watchlist queried by xxx",
+    "searchKey": "header3",
+    "csvFileName": "playGroundWatchlist.csv",
+    "watchlistVersion": 2,
+    "watchlistProvider": "Playground SOC",
+    "source": "GitHub Repository",
+    "resourceGuid": "[guid(variables('displayName'), resourceGroup().id, subscription().subscriptionId)]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/Watchlists",
+      "apiVersion": "2021-03-01-preview",
+      "name": "[format('{0}/Microsoft.SecurityInsights/{1}', parameters('workspace'), variables('resourceGuid'))]",
+      "kind": "",
+      "properties": {
+        "displayName": "[variables('displayName')]",
+        "source": "[variables('source')]",
+        "description": "[variables('description')]",
+        "provider": "[variables('watchlistProvider')]",
+        "isDeleted": false,
+        "labels": [],
+        "defaultDuration": "P1000Y",
+        "contentType": "Text/Csv",
+        "numberOfLinesToSkip": 0,
+        "itemsSearchKey": "[variables('searchKey')]",
+        "rawContent": "[format('{0}', variables('$fxv#0'))]"
+      }
+    }
+  ]
+}

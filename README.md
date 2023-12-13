@@ -10,22 +10,22 @@ Related blog post: https://hoferlabs.ch/2023/04/25/Sentinel-Playground-Bicep-Edi
 # Sentinel Playground - **Bicep Edition**
 ## Overview
 The following components can be deployed/configured:
-- resource group
+- Resource group
 - Log Analytics workspace + Sentinel solution
 - Log Analytics workspace config (retention, daily cap)
 - Sentinel config (UEBA, Anomalies)
-- Setninel data connectors
+- Sentinel data connectors
     - Azure Activity
     - Azure Active Directory
     - Defender 365 incidents
-- demo playbook (with a user-assigned Managed Identity + required permissions)
+- Demo playbook (with a user-assigned Managed Identity + required permissions)
 - Sentinel permissions to trigger playbooks
 - Sentinel Content (including Bicep templates)
-    - analytics rule
-    - automation rule
-    - log query (in a query pack)
-    - log functions
-    - watchlist (with CSV-support)
+    - Analytics rule
+    - Automation rule
+    - Log query (in a query pack)
+    - Log functions
+    - Watchlist (with CSV-support)
 - all analytics rules for Azure Activity and Azure Active Directory are enabled
 
 ## Preparation
@@ -39,7 +39,7 @@ The following components can be deployed/configured:
 
 ### using CLI / Powershell
 
-download the latest release (on the right)
+Download the latest release (on the right)
 
 and deploy either with default parameters (laName=la-sentinel-playground-01, rgName=rg-sentinel-playground-01)
 ```
@@ -68,12 +68,12 @@ to check progress: go to your subscription -> depyloments -> mainPlayground:
 ## Post deployment checks
 - create a new incident, trigger the playbook "la-sentinel-addCommentToIncident" -> check if comment is added
 - check data connectors (should take ~10min until events are received)
-- check sentinel config (ueba, anomalies)
+- check sentinel config (UEBA, anomalies)
 
 ## Update the infra
-change code/parameters (e.g. log analytics retention days), redeploy with the same commands as in previous deployment -> the infra gets updated.
+Change code/parameters (e.g. log analytics retention days), redeploy with the same commands as in previous deployment -> the infra gets updated.
 
-check the "faq / limitations / bugs" bugs chapter...
+Check the "FAQ / limitations / bugs" chapter, as there is a known bug while reapplying  the EntitiyAnalystics config.
 
 ## Useful commands
 delete created resource group (with all resources in it)
@@ -95,8 +95,8 @@ build arm from bicep (not really needed)
 az bicep build --file .\sentinelInfra\mainInfra.bicep
 ```
 
-## Faq / limitations / bugs
-- if you rerun the deployment (to update the infra), the deployment of the sentinel config EntitiyAnalystics resource fails with "Bad Request: Update request should provide ETag". Other resources get updated. This is a known API issue: https://github.com/Azure/bicep/issues/9206 (https://github.com/Azure/bicep/issues/5256 / https://techcommunity.microsoft.com/t5/azure-observability/update-saved-search/m-p/328553). 
+## FAQ / limitations / bugs
+- If you rerun the deployment (to update the infra), the deployment of the sentinel config EntitiyAnalystics resource fails with "Bad Request: Update request should provide ETag". Other resources get updated. This is a known API issue: https://github.com/Azure/bicep/issues/9206 (https://github.com/Azure/bicep/issues/5256 / https://techcommunity.microsoft.com/t5/azure-observability/update-saved-search/m-p/328553). 
 
 # Credits
 - Enable Content / Analytics Rules: I modified the script from [Javier Soriano

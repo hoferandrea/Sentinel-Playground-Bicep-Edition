@@ -1,3 +1,3 @@
 header1,header2,header3
-this,is,sparta
-42,is,answer
+loaded,from,csv
+using,bicep,loadcontent

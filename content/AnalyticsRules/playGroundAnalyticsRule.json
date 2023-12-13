@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.21.1.54444",
+      "templateHash": "4746661775038744361"
+    }
+  },
+  "parameters": {
+    "workspace": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "ruleName": "Playground Analytics Rule",
+    "description": "Description",
+    "severity": "Informational",
+    "query": "SigninLogs\r\n| take 1\r\n| extend ContentProvider='HoferLabsAG'\r\n| extend ContentStatus='experimental'\r\n"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "apiVersion": "2022-10-01-preview",
+      "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('workspace'))]",
+      "name": "[guid(variables('ruleName'))]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "[variables('ruleName')]",
+        "description": "[variables('description')]",
+        "severity": "[variables('severity')]",
+        "query": "[variables('query')]",
+        "enabled": true,
+        "customDetails": {
+          "ContentProvider": "ContentProvider",
+          "ContentStatus": "ContentStatus"
+        },
+        "alertRuleTemplateName": null,
+        "templateVersion": null,
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "incidentConfiguration": {
+          "createIncident": true
+        },
+        "queryFrequency": "PT5H",
+        "queryPeriod": "PT5H",
+        "suppressionDuration": "PT5H",
+        "suppressionEnabled": false,
+        "tactics": [
+          "DefenseEvasion"
+        ],
+        "techniques": [
+          "T1562"
+        ],
+        "entityMappings": null,
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0
+      }
+    }
+  ]
+}
